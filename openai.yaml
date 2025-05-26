@@ -1,0 +1,86 @@
+openapi: 3.0.0
+info:
+  title: n8n Task Manager API
+  version: 1.0.0
+  description: API for creating, updating, and querying asynchronous tasks
+servers:
+  - url: https://api.yourdomain.com/webhook
+
+paths:
+  /create-task:
+    post:
+      summary: Create a new async task
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                external_id:
+                  type: string
+                poll_url:
+                  type: string
+                poll_method:
+                  type: string
+                task_type:
+                  type: string
+                max_attempts:
+                  type: integer
+                timeout_minutes:
+                  type: integer
+      responses:
+        '200':
+          description: Task created successfully
+
+  /task-status/{taskId}:
+    get:
+      summary: Check status of a task
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Task status returned
+
+  /update-task/{taskId}:
+    post:
+      summary: Update task status manually
+      parameters:
+        - in: path
+          name: taskId
+          required: true
+          schema:
+            type: string
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                result:
+                  type: object
+                error_message:
+                  type: string
+      responses:
+        '200':
+          description: Task updated successfully
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization

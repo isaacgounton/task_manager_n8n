@@ -1,0 +1,316 @@
+{
+  "name": "N8N Task Creation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-task",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2f74da08-d158-4c78-bfb2-c70cad022542",
+      "name": "Webhook - Create Task",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        260
+      ],
+      "webhookId": "9c8855a9-c303-4270-b6f1-88794aa4ee29",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "4ef8ea17-50dc-4318-988b-1fdc15c09719",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        840,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Task Creation Workflow\n\nThis workflow enables secure, automated creation of new async task records via a REST API. It processes incoming JSON data, generates a unique task ID, saves the task to a Supabase table, and returns the full task object as a response.\n\n📥 Endpoint Overview\nMethod: POST\nPath: /webhook/create-task\nAuth: Header Authentication (API key via \"Authorization\" header)\nResponse: JSON body with the created task details\nUse Case: Used by clients or services to submit a new async task for processing\n\n## Expected Webhook Payload:\n```json\n{\n  \"external_id\": \"abc123\",\n  \"poll_url\": \"https://api.service.com/job/abc123/status\",\n  \"poll_method\": \"GET\",\n  \"task_type\": \"data_processing\",\n  \"max_attempts\": 10,\n  \"timeout_minutes\": 120\n}\n```\n\n## Response:\n```json\n[\n  {\n    \"task_id\": \"dd69a407-82f2-4d64-ba9b-a47af52dc0ee\",\n    \"status\": \"pending\",\n    \"external_id\": \"abc123\",\n    \"poll_url\": \"https://api.service.com/job/abc123/status\",\n    \"poll_method\": \"GET\",\n    \"task_type\": \"data_processing\",\n    \"result\": null,\n    \"error_message\": null,\n    \"created_at\": \"2025-05-26T10:34:39.633Z\",\n    \"updated_at\": \"2025-05-26T10:34:39.633Z\",\n    \"attempt_count\": 10,\n    \"max_attempts\": 10,\n    \"timeout_minutes\": 120,\n    \"metadata\": {},\n    \"user_id\": null\n  }\n]\n```\n\nExample:\n```json\ncurl -X POST https://YOURULR/webhook/create-task \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: API_KEY\" \\\n  -d '{\n    \"external_id\": \"job-123\",\n    \"poll_url\": \"https://api.example.com/job/123/status\",\n    \"poll_method\": \"GET\",\n    \"task_type\": \"data_processing\",\n    \"max_attempts\": 10,\n    \"timeout_minutes\": 60\n  }'\n```\n\n✅ Benefits\n🔒 Secured with API key via headers\n🆔 Auto-generates Task IDs\n⏱️ Includes full lifecycle config (timeouts, max attempts)\n📄 Returns full task structure, ready for frontend display or polling",
+        "height": 1320,
+        "width": 900
+      },
+      "id": "c101eec3-48d5-47df-887d-a9ea6bf4c116",
+      "name": "Workflow Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        120,
+        -1120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to generate UUID v4\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// Get webhook body data\nconst webhookData = $input.item.json.body || {};\n\n// Generate UUID\nconst taskId = generateUUID();\n\n// Return merged data ready for Supabase\nreturn {\n  task_id: taskId,\n  external_id: webhookData.external_id || null,\n  poll_url: webhookData.poll_url || null,\n  poll_method: webhookData.poll_method || 'GET',\n  task_type: webhookData.task_type || null,\n  max_attempts: webhookData.max_attempts || 10,\n  timeout_minutes: webhookData.timeout_minutes || 120,\n  status: 'pending',\n  created_at: new Date().toISOString(),\n  updated_at: new Date().toISOString(),\n  metadata: webhookData.metadata || {}\n};"
+      },
+      "id": "fa85807b-a658-4dd0-a9d0-5ca7e5560579",
+      "name": "Generate_UUID_Merge_Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_id": "={{ $('Generate_UUID_Merge_Data').item.json.task_id }}",
+            "status": "={{ $('Generate_UUID_Merge_Data').item.json.status }}",
+            "updated_at": "={{ $('Generate_UUID_Merge_Data').item.json.update_at }}",
+            "result": "={{ $('Generate_UUID_Merge_Data').item.json.result }}",
+            "attempt_count": "={{ $('Generate_UUID_Merge_Data').item.json.attempt_count}}",
+            "max_attempts": "={{ $('Generate_UUID_Merge_Data').item.json.max_attempts}}",
+            "metadata": "={{ $('Generate_UUID_Merge_Data').item.json.metadata }}",
+            "user_id": "={{ $('Generate_UUID_Merge_Data').item.json.user_id}}",
+            "timeout_minutes": "={{ $('Generate_UUID_Merge_Data').item.json.timeout_minutes}}",
+            "created_at": "={{ $('Generate_UUID_Merge_Data').item.json.created_at}}",
+            "external_id": "={{ $('Generate_UUID_Merge_Data').item.json.external_id }}",
+            "poll_url": "={{ $('Generate_UUID_Merge_Data').item.json.poll_url }}",
+            "poll_method": "={{ $('Generate_UUID_Merge_Data').item.json.poll_method }}",
+            "task_type": "={{ $('Generate_UUID_Merge_Data').item.json.task_type }}",
+            "error_message": "={{ $('Generate_UUID_Merge_Data').item.json.error_message }}"
+          },
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_id",
+              "displayName": "external_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_url",
+              "displayName": "poll_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_method",
+              "displayName": "poll_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_type",
+              "displayName": "task_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "result",
+              "displayName": "result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempt_count",
+              "displayName": "attempt_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timeout_minutes",
+              "displayName": "timeout_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        260
+      ],
+      "id": "d2bff76f-d2ed-41e4-ab44-b260e2040597",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - Create Task": {
+      "main": [
+        [
+          {
+            "node": "Generate_UUID_Merge_Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate_UUID_Merge_Data": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "kByCQTr1nYAUTU2a"
+  },
+  "versionId": "dfe35baa-b842-4fc9-9465-9aaa23013116",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "qV9H15qgSfVmNOkf",
+  "tags": []
+}

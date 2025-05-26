@@ -1,0 +1,560 @@
+{
+  "name": "N8N Task Monitor Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 2
+            }
+          ]
+        }
+      },
+      "id": "5228fa9d-59bf-470b-87c8-f2812220b427",
+      "name": "Every 2 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        20,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.length }}",
+              "operation": "larger"
+            }
+          ]
+        }
+      },
+      "id": "59ecc592-ec87-40ca-9781-6e380e6ce034",
+      "name": "Any Tasks to Process?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        380,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "8bccfba6-e234-412c-a739-4db30a49cf16",
+      "name": "Process in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        660,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.poll_method }}",
+        "url": "={{ $json.poll_url }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "a1ec8ddf-2568-40e5-9b5c-7661f60591d2",
+      "name": "Poll External API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        860,
+        160
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process the API response and determine task status\nconst item = $input.item.json;\nconst taskData = $node['Process in Batches'].json;\nconst apiResponse = item;\n\ntry {\n  let newStatus = taskData.status;\n  let result = null;\n  let errorMessage = null;\n  \n  // Check if the HTTP request failed\n  if (apiResponse.error) {\n    // Increment attempt count\n    const attemptCount = (taskData.attempt_count || 0) + 1;\n    \n    if (attemptCount >= taskData.max_attempts) {\n      newStatus = 'failed';\n      errorMessage = `Max attempts reached. Last error: ${apiResponse.error.message}`;\n    } else {\n      // Keep current status, just increment attempts\n      newStatus = taskData.status;\n    }\n    \n    return {\n      json: {\n        task_id: taskData.task_id,\n        status: newStatus,\n        attempt_count: attemptCount,\n        error_message: errorMessage,\n        updated_at: new Date().toISOString()\n      }\n    };\n  }\n  \n  // Process successful response\n  // Adapt this based on your API's response structure\n  if (apiResponse.status === 'completed' || apiResponse.status === 'done') {\n    newStatus = 'completed';\n    result = JSON.stringify(apiResponse.result || apiResponse);\n  } else if (apiResponse.status === 'failed' || apiResponse.status === 'error') {\n    newStatus = 'failed';\n    errorMessage = apiResponse.error || apiResponse.message || 'Task failed';\n  } else if (apiResponse.status === 'running' || apiResponse.status === 'in_progress') {\n    newStatus = 'in_progress';\n  }\n  \n  // Check for timeout\n  const createdAt = new Date(taskData.created_at);\n  const now = new Date();\n  const minutesElapsed = (now - createdAt) / (1000 * 60);\n  \n  if (minutesElapsed > taskData.timeout_minutes) {\n    newStatus = 'failed';\n    errorMessage = `Task timed out after ${taskData.timeout_minutes} minutes`;\n  }\n  \n  return {\n    json: {\n      task_id: taskData.task_id,\n      status: newStatus,\n      result: result,\n      error_message: errorMessage,\n      attempt_count: (taskData.attempt_count || 0) + 1,\n      updated_at: new Date().toISOString()\n    }\n  };\n} catch (error) {\n  return {\n    json: {\n      task_id: taskData.task_id,\n      status: taskData.status,\n      error_message: `Processing error: ${error.message}`,\n      attempt_count: (taskData.attempt_count || 0) + 1,\n      updated_at: new Date().toISOString()\n    }\n  };\n}"
+      },
+      "id": "71374658-3d99-4eeb-a7bb-456a48744d75",
+      "name": "Process API Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1060,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": "task_manager",
+        "columns": {
+          "0": "s",
+          "1": "t",
+          "2": "a",
+          "3": "t",
+          "4": "u",
+          "5": "s",
+          "6": ",",
+          "7": "r",
+          "8": "e",
+          "9": "s",
+          "10": "u",
+          "11": "l",
+          "12": "t",
+          "13": ",",
+          "14": "e",
+          "15": "r",
+          "16": "r",
+          "17": "o",
+          "18": "r",
+          "19": "_",
+          "20": "m",
+          "21": "e",
+          "22": "s",
+          "23": "s",
+          "24": "a",
+          "25": "g",
+          "26": "e",
+          "27": ",",
+          "28": "a",
+          "29": "t",
+          "30": "t",
+          "31": "e",
+          "32": "m",
+          "33": "p",
+          "34": "t",
+          "35": "_",
+          "36": "c",
+          "37": "o",
+          "38": "u",
+          "39": "n",
+          "40": "t",
+          "41": ",",
+          "42": "u",
+          "43": "p",
+          "44": "d",
+          "45": "a",
+          "46": "t",
+          "47": "e",
+          "48": "d",
+          "49": "_",
+          "50": "a",
+          "51": "t",
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "external_id",
+              "displayName": "external_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "poll_url",
+              "displayName": "poll_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "poll_method",
+              "displayName": "poll_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_type",
+              "displayName": "task_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "result",
+              "displayName": "result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attempt_count",
+              "displayName": "attempt_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeout_minutes",
+              "displayName": "timeout_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0ba7ef6e-7a76-4983-86cf-9cd1335f9e8c",
+      "name": "Update Task Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        1260,
+        160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "operation": "equals",
+              "value2": "failed"
+            }
+          ]
+        }
+      },
+      "id": "2506f25d-de64-4a46-816f-bcf52f75e524",
+      "name": "Task Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U08LHK4F67K",
+          "mode": "list",
+          "cachedResultName": "slvalics"
+        },
+        "text": "Task X status",
+        "otherOptions": {}
+      },
+      "id": "d06ed1bc-2019-4244-af7d-a84dbc467f08",
+      "name": "Send Alert (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        140
+      ],
+      "webhookId": "ac0b199d-4958-4a2f-a584-132d15d0fe24",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "v7fSy0lXBBgTkqwz",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Task Monitor Workflow\n\nThis n8n workflow automatically monitors asynchronous tasks managed in a Supabase-backed task_manager table. It polls external APIs, checks task status, updates the database accordingly, and sends alerts for failed tasks.\n\nRuns every 2 minutes to:\n1. Fetch pending/in-progress tasks from DB\n2. Poll their external APIs for status\n3. Update task status in DB\n4. Send alerts for failed tasks\n\n🧪 Example Use Case\nScenario:\nYour backend service creates long-running jobs (e.g., data processing, AI training, etc.), and saves them in a task_manager DB table. \nThis workflow:\nRegularly checks task states via API.\nUpdates the DB to reflect real-time status.\nSends you a Slack message if something fails or times out.\n\n✅ Benefits\nFully automated monitoring of async jobs.\nScalable processing using batch execution.\nAlerting integration with Slack ensures rapid incident response.\nRetry and timeout logic minimizes manual interventions.",
+        "height": 510,
+        "width": 1840
+      },
+      "id": "25361841-9849-4eb3-b0c8-e561c11be252",
+      "name": "Monitor Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "status",
+              "value": "=pending"
+            },
+            {
+              "column": "status",
+              "value": "in_progress"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        200,
+        160
+      ],
+      "id": "c7781617-a85a-4ce5-98ad-aac66ebb2225",
+      "name": "Postgres",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every 2 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Tasks to Process?": {
+      "main": [
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process in Batches": {
+      "main": [
+        [
+          {
+            "node": "Poll External API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll External API": {
+      "main": [
+        [
+          {
+            "node": "Process API Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process API Response": {
+      "main": [
+        [
+          {
+            "node": "Update Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Task Status": {
+      "main": [
+        [
+          {
+            "node": "Task Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Failed?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert (Slack)": {
+      "main": [
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "Any Tasks to Process?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "kByCQTr1nYAUTU2a"
+  },
+  "versionId": "1e24d86e-184f-4ac0-9d40-25c4d070395c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "QFS75LRonSSuhbXJ",
+  "tags": []
+}
