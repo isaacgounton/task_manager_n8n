@@ -1,13 +1,11 @@
 {
-  "name": "N8N Task Monitor Workflow",
   "nodes": [
     {
       "parameters": {
         "rule": {
           "interval": [
             {
-              "field": "minutes",
-              "minutesInterval": 2
+              "field": "seconds"
             }
           ]
         }
@@ -18,26 +16,6 @@
       "typeVersion": 1,
       "position": [
         20,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "number": [
-            {
-              "value1": "={{ $json.length }}",
-              "operation": "larger"
-            }
-          ]
-        }
-      },
-      "id": "59ecc592-ec87-40ca-9781-6e380e6ce034",
-      "name": "Any Tasks to Process?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        380,
         160
       ]
     },
@@ -91,8 +69,9 @@
         "operation": "update",
         "schema": {
           "__rl": true,
+          "value": "public",
           "mode": "list",
-          "value": "public"
+          "cachedResultName": "public"
         },
         "table": "task_manager",
         "columns": {
@@ -150,7 +129,9 @@
           "51": "t",
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [],
+          "matchingColumns": [
+            "task_id"
+          ],
           "schema": [
             {
               "id": "task_id",
@@ -329,7 +310,6 @@
           "string": [
             {
               "value1": "={{ $json.status }}",
-              "operation": "equals",
               "value2": "failed"
             }
           ]
@@ -434,26 +414,48 @@
           "name": "SupaBase-N8N"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66ec4623-96dc-4f60-9d56-f66384754117",
+              "leftValue": "={{ $json.task_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        380,
+        160
+      ],
+      "id": "241bc010-7a4d-4ea2-8fc8-45857ad45855",
+      "name": "If"
     }
   ],
-  "pinData": {},
   "connections": {
     "Every 2 Minutes": {
       "main": [
         [
           {
             "node": "Postgres",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Any Tasks to Process?": {
-      "main": [
-        [
-          {
-            "node": "Process in Batches",
             "type": "main",
             "index": 0
           }
@@ -537,7 +539,18 @@
       "main": [
         [
           {
-            "node": "Any Tasks to Process?",
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Process in Batches",
             "type": "main",
             "index": 0
           }
@@ -545,16 +558,9 @@
       ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "errorWorkflow": "kByCQTr1nYAUTU2a"
-  },
-  "versionId": "1e24d86e-184f-4ac0-9d40-25c4d070395c",
+  "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
-  },
-  "id": "QFS75LRonSSuhbXJ",
-  "tags": []
+  }
 }

@@ -1,0 +1,52 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "poll",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "daa6535c-1220-475e-aaf6-7ebab4dca7c3",
+      "name": "Webhook",
+      "webhookId": "a63fc87a-01ca-4266-a745-d84dfc354059"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "a6b8b7ae-4d09-4de6-b06c-ee6092f4cee7",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  }
+}
