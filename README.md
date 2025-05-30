@@ -1,331 +1,177 @@
-📌 Async Task Manager in n8n – Project Description & Setup Manual
-🧭 Overview
-The n8n Task Manager system is a low-code orchestration solution designed to manage asynchronous or long-running external jobs (like ML processes, data pipelines, or report generators) by:
-
-Creating task entries with unique IDs
-
-Polling external APIs for status
-
-Handling retries, timeouts, and failures
-
-Exposing APIs for querying task state
-
-Sending Slack alerts for failed tasks
-
-It integrates Supabase as a task store and is fully implemented in n8n workflows, without needing third-party queues or services.
-
-🏗️ Project Architecture
-🔄 Workflow Overview (Based on Diagram from Page 3)
-Create Task Workflow
-Accepts task parameters via webhook, generates a UUID, and inserts into the task_manager table.
-
-Task Monitor Workflow
-Runs every 2 mins. Retrieves pending or in_progress tasks, polls external APIs, updates task status, and alerts on failure.
-
-Task Query Workflow
-GET endpoint that lets clients fetch task status by ID.
-
-Update Task Workflow
-POST endpoint to manually update task status if the external service uses callbacks instead of polling.
-
-🗃️ Database Design
-🧱 Supabase Table: task_manager
-Column	Type	Description
-task_id	varchar (PK)	Globally unique task identifier
-status	varchar	pending, in_progress, completed, failed
-external_id	varchar	Job ID from external API
-poll_url	text	Status check URL
-poll_method	varchar	HTTP method for polling
-task_type	varchar	Type/category of task
-result	jsonb	Final result or link to data
-error_message	text	Error description
-created_at	timestamptz	Task creation timestamp
-updated_at	timestamptz	Last update timestamp
-attempt_count	int	Poll attempt counter
-max_attempts	int	Max allowed retries
-timeout_minutes	int	Deadline before auto-failure
-metadata	jsonb	Custom user-supplied data
-user_id	uuid	Optional user reference
-
-🛡️ Supabase Policies
-✅ SELECT: anyone can read tasks
-
-✅ INSERT: authenticated and service_role roles
-
-✅ UPDATE/DELETE: only service_role role
-
-These allow n8n to write freely while optionally allowing UI apps to read safely.
-
-🧰 Workflow Setup Guide
-1. Webhook - Create Task
-Trigger: POST to /create-task
-
-Input:
-
-json
-Copy
-Edit
-{
-  "external_id": "abc123",
-  "poll_url": "https://api.xyz.com/status/abc123",
-  "poll_method": "GET",
-  "task_type": "data_processing",
-  "max_attempts": 10,
-  "timeout_minutes": 60
-}
-Output: Returns full task object with generated task_id
-
-2. Scheduled Task Monitor
-Trigger: Every 2 minutes
-
-Logic:
-
-Fetch tasks where status IN ('pending', 'in_progress')
-
-For each:
-
-Call poll_url
-
-Interpret status (done/completed/failed/in_progress)
-
-Update DB
-
-Alert (Slack) on failure
-
-Batching: Processes tasks in groups of 5
-
-3. Webhook - Task Status Query
-Trigger: GET /task-status/:taskId
-
-Output:
-
-json
-Copy
-Edit
-{
-  "task_id": "abc123",
-  "status": "completed",
-  "result": "https://result-link.com/file.csv"
-}
-4. Webhook - Manual Task Update
-Trigger: POST /update-task/:taskId
-
-Input: Can update fields like status, result, error_message
-
-Use Case: External service sends status update directly to n8n
-
-📦 Installation Instructions
-🛠 Prerequisites
-n8n self-hosted (v1.0+)
-
-Supabase project with task_manager table
-
-Slack app (for alerts)
-
-🔌 Connect Services
-In n8n, set up credentials:
-
-Supabase API
-
-Slack OAuth2
-
-Optional: httpHeaderAuth for secured endpoints
-
-Import the 4 workflows into your n8n instance:
-
-Create Task
-
-Monitor Tasks
-
-Query Task
-
-Update Task
-
-Add Supabase and Slack credentials to appropriate nodes.
-
-Test with sample POST /create-task to insert a task.
-
-💡 Example Use Case
-A user requests a long report. You:
-
-Call /create-task with polling info.
-
-n8n creates the task and returns a task_id.
-
-Task Monitor picks it up and polls the status every 2 mins.
-
-Once done, it updates status = completed.
-
-UI or user checks /task-status/:taskId to retrieve result.
-
-🧭 Future Enhancements (Phase 2)
-Dashboard UI (e.g., React + REST API endpoints)
-
-Task filtering by user_id
-
-Task retry & cancel endpoints
-
-Task cleanup (e.g., archive after 30 days)
-
-This system is designed to evolve easily thanks to its modular, centralized architecture.
-
-Let me know if you’d like:
-
-A .zip export of all workflows
-
-Supabase schema migration script
-
-Auto-deployment via Docker
-
-Public/production-ready API routes with auth
-
-🗃️ Supabase Schema Migration Script
-This script sets up the task_manager table with sensible defaults, indexes for performance, and Row-Level Security (RLS) policies optimized for public queries, authenticated users, and service roles.
-
-✅ Full SQL Script
-sql
-Copy
-Edit
--- Create table
-CREATE TABLE IF NOT EXISTS task_manager (
-    task_id VARCHAR(50) PRIMARY KEY,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
-    external_id VARCHAR(255),
-    poll_url TEXT,
-    poll_method VARCHAR(10) DEFAULT 'GET',
-    task_type VARCHAR(50),
-    result JSONB,
-    error_message TEXT,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    attempt_count INTEGER DEFAULT 0,
-    max_attempts INTEGER DEFAULT 10,
-    timeout_minutes INTEGER DEFAULT 120,
-    metadata JSONB,
-    user_id UUID
-);
-
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_task_status ON task_manager(status);
-CREATE INDEX IF NOT EXISTS idx_created_at ON task_manager(created_at);
-
--- Enable Row-Level Security
-ALTER TABLE task_manager ENABLE ROW LEVEL SECURITY;
-
--- Remove old policies
-DROP POLICY IF EXISTS "Tasks are viewable by everyone" ON task_manager;
-DROP POLICY IF EXISTS "Authenticated users can create tasks" ON task_manager;
-DROP POLICY IF EXISTS "Only service role can update tasks" ON task_manager;
-DROP POLICY IF EXISTS "Only service role can delete tasks" ON task_manager;
-
--- Select policy: allow everyone (or restrict by user_id if needed)
-CREATE POLICY "Enable read access for all"
-    ON task_manager FOR SELECT
-    USING (true);
-
--- Insert policy: allow authenticated and service roles
-CREATE POLICY "Enable insert for service role and authenticated users"
-    ON task_manager FOR INSERT
-    WITH CHECK (
-        auth.role() IN ('service_role', 'authenticated') OR
-        auth.jwt() IS NOT NULL
-    );
-
--- Update policy: only service role
-CREATE POLICY "Enable update for service role"
-    ON task_manager FOR UPDATE
-    USING (
-        auth.role() = 'service_role' OR
-        auth.jwt()->>'role' = 'service_role'
-    );
-
--- Delete policy: only service role
-CREATE POLICY "Enable delete for service role"
-    ON task_manager FOR DELETE
-    USING (
-        auth.role() = 'service_role' OR
-        auth.jwt()->>'role' = 'service_role'
-    );
-🔐 Public API Routes with Authentication
-Your n8n workflows expose API endpoints for external or frontend usage. Here's how to make them production-grade and secure.
-
-🔧 Step-by-Step Setup
-1. Authentication via Header Token
-Each webhook must use HTTP Header Authentication in n8n.
-
-In Webhook Node Settings:
-
-Authentication: Header Auth
-
-Set up httpHeaderAuth credential in n8n:
-
-yaml
-Copy
-Edit
-Name: TaskManager
-Header Name: Authorization
-Header Value: Bearer YOUR_SECRET_API_KEY
-Pass this in every client request:
-
-h
-Copy
-Edit
-Authorization: Bearer YOUR_SECRET_API_KEY
-2. Routes to Expose
-Route	Method	Purpose	Auth	Notes
-/create-task	POST	Create new task	✅	Returns task_id immediately
-/task-status/:taskId	GET	Fetch task status	✅	Public dashboard/UI polling
-/update-task/:taskId	POST	External service callback	✅	Updates task status/data
-
-These match the workflows you've uploaded and are webhook-compatible with third-party systems or frontend apps.
-
-3. Security Best Practices
-Use random UUID-based task_id to avoid guessing.
-
-Rotate your API_KEY periodically.
-
-Log unauthorized access attempts (you can use an n8n workflow for this).
-
-Use a rate-limiter (proxy-level or workflow-level) for abuse protection.
-
-🌐 Example Secure API Usage
-✅ Create Task
-bash
-Copy
-Edit
-curl -X POST https://api.yourdomain.com/webhook/create-task \
--H "Authorization: Bearer YOUR_SECRET_API_KEY" \
--H "Content-Type: application/json" \
--d '{
-  "external_id": "abc123",
-  "poll_url": "https://api.example.com/status/abc123",
-  "poll_method": "GET",
-  "task_type": "ml_training",
-  "max_attempts": 5,
-  "timeout_minutes": 60
-}'
-✅ Check Status
-bash
-Copy
-Edit
-curl -X GET https://api.yourdomain.com/webhook/task-status/dd69a407-82f2 \
--H "Authorization: Bearer YOUR_SECRET_API_KEY"
-✅ External API Callback (Update)
-bash
-Copy
-Edit
-curl -X POST https://api.yourdomain.com/webhook/update-task/dd69a407-82f2 \
--H "Authorization: Bearer YOUR_SECRET_API_KEY" \
--H "Content-Type: application/json" \
--d '{
-  "status": "completed",
-  "result": {"summary": "Job done successfully"}
-}'
-✅ Final Checklist for Production
-Task	Status
-✅ Supabase schema and RLS applied	✔️
-✅ API token created in n8n credentials	✔️
-✅ Webhook routes authenticated	✔️
-✅ Rate limiting via NGINX/Cloudflare	⚠️ (Recommended)
-✅ Logging enabled in Supabase/n8n	⚠️ (Optional)
-✅ Backup/monitor workflows exported	✔️
+# Task Manager N8N
+
+A powerful, low-code orchestration system built with n8n workflows for managing asynchronous and long-running tasks. This solution enables you to track external jobs (ML processes, data pipelines, API integrations, AI workflows) with automated polling, status updates, and real-time monitoring through a React frontend.
+
+## Requirements
+
+### n8n (Cloud or Self-Hosted)
+- **n8n Cloud** (recommended for quick start) or **n8n Community Edition** (self-hosted)
+- The free tier of n8n Cloud is sufficient for testing and small-scale deployments
+- **How to get started with n8n Cloud:**
+  1. Visit [n8n.io](https://n8n.io)
+  2. Click "Start free trial" (14-day trial, then free tier available)
+  3. Create your account with email or Google/GitHub login
+  4. Your n8n instance will be ready immediately at `your-name.app.n8n.cloud`
+
+### Supabase Database
+- A Supabase project for storing task data
+- The **free tier is sufficient** (includes 500MB database, unlimited API requests)
+- **How to create a Supabase account:**
+  1. Go to [supabase.com](https://supabase.com)
+  2. Click "Start your project" and sign up with GitHub or email
+  3. Create a new project (choose a region close to your users)
+  4. Save your project URL and API keys from Settings → API
+  5. The database will be ready in ~2 minutes
+
+## Database Setup
+
+### 1. Import the Database Schema
+Once your Supabase project is ready:
+1. Go to the SQL Editor in your Supabase dashboard (left sidebar)
+2. Click "New query"
+3. Copy and paste the contents of `task_manager_migration.sql`
+4. Click "Run" to create the table and security policies
+
+<!-- Picture: Supabase SQL Editor -->
+
+### 2. Get Supabase Credentials
+
+#### For Frontend (React App)
+1. In Supabase dashboard, go to Settings → API
+2. You'll need:
+   - **Project URL**: `https://your-project.supabase.co`
+   - **Anon Public Key**: Safe to use in frontend apps
+3. Create a `.env` file in the `frontend/` directory:
+   ```env
+   REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-anon-public-key
+   ```
+
+<!-- Picture: Supabase API Settings -->
+
+#### For n8n (PostgreSQL Connection)
+1. In Supabase dashboard, go to Settings → Database
+2. You'll need the connection details:
+   - **Host**: Your project database host
+   - **Database name**: `postgres`
+   - **Port**: `5432`
+   - **User**: `postgres`
+   - **Password**: Your database password (shown once during project creation)
+
+<!-- Picture: Supabase Database Settings -->
+
+3. In n8n, create a new PostgreSQL credential with these details
+
+## n8n Workflow Setup
+
+### 1. Create a Folder for Organization
+1. In your n8n dashboard, click on "Workflows" in the left sidebar
+2. Click the folder icon to create a new folder
+3. Name it "Task Manager" (or any name you prefer for organization)
+4. This helps keep your task management workflows separate from other automations
+
+<!-- Picture: n8n folder creation -->
+
+### 2. Import Task Manager Workflows
+1. Navigate to your Task Manager folder
+2. Import the following workflow files from the `TaskManager/` directory:
+   - `N8N_Task_Creation_Workflow.json` - Creates new tasks via webhook
+   - `N8N_Task_Monitor_Workflow.json` - Monitors and updates task status
+   - `N8N_Get_Status_Query_Workflow.json` - Query task status endpoint
+   - `N8N_Task_Update_Workflow.json` - Manual task updates via webhook
+   
+3. To import each workflow:
+   - Click "Add workflow" → "Import from File" 
+   - Select the JSON file
+   - The workflow will open in the editor
+
+<!-- Picture: n8n import workflow -->
+
+4. After importing, you'll need to:
+   - Update the PostgreSQL credentials in each workflow
+   - Activate each workflow (toggle the "Active" switch)
+   - Note the webhook URLs for your API endpoints
+
+### 3. Configure and Test Task Manager Nodes
+1. Open the `N8N_Task_Manager_Nodes.json` workflow
+2. Find the URL node in the workflow
+3. Update the URL to point to your n8n instance:
+   - If using n8n Cloud: `https://your-name.app.n8n.cloud/webhook/xxx`
+   - If self-hosted: `https://your-domain.com/webhook/xxx`
+
+<!-- Picture: URL node configuration -->
+
+4. Test the setup:
+   - Click on the `TM_SIMPLE_NODE` 
+   - Click "Execute Node" to run it manually
+   - You should receive a TaskID response like: `2d9c4c2e-c39a-4da2-aaad-2cd096e2009d`
+   - This confirms your Task Manager is working correctly
+
+<!-- Picture: Successful TaskID response -->
+
+5. If successful, the task will be created in your Supabase database
+   - You can verify this in Supabase Table Editor → task_manager table
+
+## Demo Workflows - AI Creative Automation
+
+### 1. Import Demo Workflows
+Create a separate folder for the demo workflows to see Task Manager in action:
+
+1. Create a new folder in n8n called "AI Creative Demo" (or similar)
+2. Import the following workflows from the `DemoVideoCreation/` directory:
+   - `01__VL__Form_submission.json` - User input form for creative parameters
+   - `02__VL__Image_Generation.json` - AI image generation with OpenAI
+   - `03__VL__Video_Creation.json` - Video animation with Kling
+   - `04__VL__Audio.json` - Text-to-speech with ElevenLabs
+   - `05__VL__Lipsync_Creation.json` - Lipsync video generation
+
+### 2. Understanding the Demo Architecture
+These workflows demonstrate a complete AI creative pipeline that:
+- Accepts user input (image description, style, voice)
+- Generates images using AI
+- Creates animated videos
+- Produces voice narration
+- Combines everything into a lipsync video
+
+**Watch the full explanation**: [YouTube Tutorial - Task Manager Demo](https://www.youtube.com/watch?v=PckWZW2fhwQ)
+
+### 3. Required API Credentials for Demo
+To run the demo workflows, you'll need:
+- **OpenAI API** - For image generation
+- **ElevenLabs API** - For text-to-speech
+- **PiAPI** - For Kling video generation
+- **FAL API** - For Tavus lipsync
+
+Note: These are optional - the core Task Manager works without them
+
+## Frontend Application (Optional)
+
+### Running the Task Monitor UI
+If you want a visual interface to monitor your tasks:
+
+1. Navigate to the `frontend/` directory
+2. Check the `frontend/README.md` for detailed setup instructions
+3. Quick start:
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+4. The React app will run locally at `http://localhost:3000`
+
+### Features
+- Real-time task status monitoring
+- Visual display of task results (images, videos, audio)
+- Running time tracking for active tasks
+- Auto-refresh for live updates
+- Supabase real-time subscriptions
+
+Note: Make sure you've configured the `.env` file with your Supabase credentials before starting
+
+## Support & Community
+
+For questions, support, or discussions about this project:
+
+- **GitHub**: Open an issue in this repository
+- **Community Forum**: [RoboNuggets on Skool](https://www.skool.com/robonuggets/about?ref=eab1a6d8a1aa4769b1979373715509a2)
+- **Free Community**: [RoboNuggets Free on Skool](https://www.skool.com/robonuggets-free/about?ref=eab1a6d8a1aa4769b1979373715509a2)
