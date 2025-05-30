@@ -171,7 +171,15 @@ const TaskViewer: React.FC = () => {
   }, [])
 
   const groupedTasks = groupTasksByExternalId()
-  const externalIds = Object.keys(groupedTasks).sort()
+  const externalIds = Object.keys(groupedTasks).sort((a, b) => {
+    const aLatestTask = groupedTasks[a].reduce((latest, task) => 
+      new Date(task.created_at) > new Date(latest.created_at) ? task : latest
+    )
+    const bLatestTask = groupedTasks[b].reduce((latest, task) => 
+      new Date(task.created_at) > new Date(latest.created_at) ? task : latest
+    )
+    return new Date(bLatestTask.created_at).getTime() - new Date(aLatestTask.created_at).getTime()
+  })
 
   // Auto-select first external ID if none selected
   useEffect(() => {
