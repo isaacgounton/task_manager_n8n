@@ -32,7 +32,7 @@ Once your Supabase project is ready:
 3. Copy and paste the contents of `task_manager_migration.sql`
 4. Click "Run" to create the table and security policies
 
-<!-- Picture: Supabase SQL Editor -->
+![Supabase SQL Editor](images/supabase-sql-editor.png)
 
 ### 2. Get Supabase Credentials
 
@@ -47,7 +47,7 @@ Once your Supabase project is ready:
    REACT_APP_SUPABASE_ANON_KEY=your-anon-public-key
    ```
 
-<!-- Picture: Supabase API Settings -->
+![Supabase API Settings](images/supabase-api-settings.png)
 
 #### For n8n (PostgreSQL Connection)
 1. In Supabase dashboard, go to Settings → Database
@@ -58,7 +58,7 @@ Once your Supabase project is ready:
    - **User**: `postgres`
    - **Password**: Your database password (shown once during project creation)
 
-<!-- Picture: Supabase Database Settings -->
+![Supabase Database Settings](images/supabase-database-settings.png)
 
 3. In n8n, create a new PostgreSQL credential with these details
 
@@ -70,7 +70,7 @@ Once your Supabase project is ready:
 3. Name it "Task Manager" (or any name you prefer for organization)
 4. This helps keep your task management workflows separate from other automations
 
-<!-- Picture: n8n folder creation -->
+![n8n Folder Creation](images/n8n-folder-creation.png)
 
 ### 2. Import Task Manager Workflows
 1. Navigate to your Task Manager folder
@@ -85,8 +85,6 @@ Once your Supabase project is ready:
    - Select the JSON file
    - The workflow will open in the editor
 
-<!-- Picture: n8n import workflow -->
-
 4. After importing, you'll need to:
    - Update the PostgreSQL credentials in each workflow
    - Activate each workflow (toggle the "Active" switch)
@@ -99,7 +97,6 @@ Once your Supabase project is ready:
    - If using n8n Cloud: `https://your-name.app.n8n.cloud/webhook/xxx`
    - If self-hosted: `https://your-domain.com/webhook/xxx`
 
-<!-- Picture: URL node configuration -->
 
 4. Test the setup:
    - Click on the `TM_SIMPLE_NODE` 
@@ -107,7 +104,7 @@ Once your Supabase project is ready:
    - You should receive a TaskID response like: `2d9c4c2e-c39a-4da2-aaad-2cd096e2009d`
    - This confirms your Task Manager is working correctly
 
-<!-- Picture: Successful TaskID response -->
+![Successful TaskID Response](images/taskid-response.png)
 
 5. If successful, the task will be created in your Supabase database
    - You can verify this in Supabase Table Editor → task_manager table
@@ -138,8 +135,8 @@ These workflows demonstrate a complete AI creative pipeline that:
 ### 3. Required API Credentials for Demo
 To run the demo workflows, you'll need:
 - **OpenAI API** - For image generation
-- **ElevenLabs API** - For text-to-speech
-- **PiAPI** - For Kling video generation
+- **ElevenLabs API** - For text-to-speech ([Get started here](https://try.elevenlabs.io/ruugnmjj7522))
+- **PiAPI** - For Kling video generation ([Sign up here](https://piapi.ai/workspace?via=valics))
 - **FAL API** - For Tavus lipsync
 
 Note: These are optional - the core Task Manager works without them
