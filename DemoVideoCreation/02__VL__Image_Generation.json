@@ -1,0 +1,653 @@
+{
+  "name": "02. VL: Image Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Image Prompt Agent').item.json.output }}"
+            },
+            {
+              "name": "size",
+              "value": "={{ $('Get Image format to OpenAI').item.json.Format }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        160
+      ],
+      "id": "e53a5206-c113-4c09-afa6-2232d2a5792a",
+      "name": "Generate Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "P2h6EXER26otjoyl",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        0
+      ],
+      "id": "7fdb9ad8-0822-40b4-9b08-d84ded8cea20",
+      "name": "Convert to Binary"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A digital caricature portrait of a {{ $('TM_GetStatus').item.json.result['Subject Description'] }}, with [notable facial features or expression]. The portrait is rendered in a {{ $('TM_GetStatus').item.json.result['Visual Style'] }} aesthetic, with an exaggeration level of {{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}. The background features {{ $('TM_GetStatus').item.json.Background || \"\" }}. The lighting is {{ $('TM_GetStatus').item.json['Lighting Style'] || \"\" }}, enhancing the stylized features and giving a whimsical, animated look.",
+        "options": {
+          "systemMessage": "=# Overview\nYou are an AI agent that transforms uploaded images into digital exaggerated caricature-style portraits rendered in a Pixar-style (or similar), based on adjustable exaggeration settings. These visuals are designed to be funny, whimsical, and engaging.\n\n## Prompt template to be used.\nA digital caricature portrait of a [describe subject: age, gender, ethnicity], wearing [clothing/accessory details], with [notable facial features or expression]. The portrait is rendered in a [Pixar-style / 3D toon / painterly] aesthetic, with an exaggeration level of [low / medium / high / extreme]. The background features [optional: scenery or color]. The lighting is [soft/studio/natural/etc.], enhancing the stylized features and giving a whimsical, animated look.\n\n## Exaggeration Level Guide:\nYou can use one of these levels to control how far the caricature pushes the features:\nLow – subtle exaggeration, nearly realistic\nMedium – playful stylization, like a Pixar character\nHigh – strong cartoon effect, large eyes, wide smile, rounded features\nExtreme – full caricature, highly expressive and almost comical\n\n\n## Objective:\n- If there is an image input, analyze the subject's key features (face, expression, outfit) to generate a vivid and funny visual prompt.\n- The result should create a caricature that fits the style and exaggeration level requested.\n\n## Output Instructions:\n- Output only the final image prompt — nothing else.\n- No quotation marks around the prompt.\n- No extra commentary, explanations, or rephrasings.\n- Ensure the prompt feels complete — no placeholders or missing parts.\n\n## Example Prompt Format:\nA digital caricature portrait of a middle-aged woman with light skin, wearing a black bowler hat and a sleeveless black dress with white polka dots. She has shoulder-length dark hair, expressive large eyes, and a confident smile. The portrait is rendered in a Pixar-style, with an exaggeration level of high. The background is a warm studio gradient. The lighting is soft and enhances her stylized facial features."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        120,
+        0
+      ],
+      "id": "43bea0b3-a94f-4483-a0d5-780759719ff5",
+      "name": "Image Prompt Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        120,
+        200
+      ],
+      "id": "9c56d030-08eb-42f4-a70d-e474903e6cfc",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QPZnBdHx3ZTb2QZi",
+          "name": "OpenAi account MILL"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-piapi.fileUpload",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        0
+      ],
+      "id": "e7ae04ca-2f74-4b45-8b99-f43e51c13788",
+      "name": "File Upload",
+      "credentials": {
+        "piAPIApi": {
+          "id": "tLdUHTT1TxJrmvCo",
+          "name": "PiAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 560,
+        "width": 1740
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -180
+      ],
+      "id": "b1aff8ea-22eb-4931-8963-38a4894b7352",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node\n// Map aspect ratios to specific OpenAI resolution strings\n\nconst inputFormat = $('TM_GetStatus').first().json.result.Format?.trim();\n\nlet outputResolution = \"\";\n\nswitch (inputFormat) {\n  case \"1:1\":\n    outputResolution = \"1024x1024\";\n    break;\n  case \"16:9\":\n    outputResolution = \"1536x1024\";\n    break;\n  case \"9:16\":\n    outputResolution = \"1024x1536\";\n    break;\n  default:\n    outputResolution = \"1024x1024\";\n    break;\n}\n\nreturn [\n  {\n    json: {\n      Format: outputResolution\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "2ff26feb-b9cc-4b84-ad41-d7f8f3df3b21",
+      "name": "Get Image format to OpenAI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4585ccbf-80a3-4ca2-b38c-26f9581f2bda",
+              "leftValue": "={{ $json.result.toString() }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "75d706cd-8113-4bb0-bd61-e6bdf888a65e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "prompt",
+              "value": "={{ $('Image Prompt Agent').item.json.output }}"
+            },
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "size",
+              "value": "={{ $('Get Image format to OpenAI').item.json.Format }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        -100
+      ],
+      "id": "5dbafd61-050c-42f8-8e7a-129f5b0a48f1",
+      "name": "Generate image 2 image",
+      "credentials": {
+        "openAiApi": {
+          "id": "P2h6EXER26otjoyl",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('JSONInput').first().json[\"Upload Image\"] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        -100
+      ],
+      "id": "2a42d5b2-db50-45e7-8345-daab04757264",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code Node (v2)\n\n// 1. Get the original sheet data from the JSONInput node\nconst allJsonInput = $('TM_GetStatus').first().json.result ;\nconst original = allJsonInput.length\n  ? allJsonInput[0].json\n  : {};\n\n// 2. Safely trim Upload_Image\nconst rawUpload = original[\"Upload Image\"];\nconst uploadImage = (typeof rawUpload === \"string\")\n  ? rawUpload.trim()\n  : \"\";\n\n// 3. Safely trim Final_Image for fallback\nconst rawFinal = original[\"Final_Image\"];\nconst fallbackImage = (typeof rawFinal === \"string\")\n  ? rawFinal.trim()\n  : \"\";\n\n// 4. Decide which image to use\nconst imageToUse = uploadImage !== \"\" ? uploadImage : fallbackImage;\n\n// 5. Boolean flag\nconst hasValidImage = imageToUse !== \"\";\n\n// 6. Return result + chosen URL + indicator\nreturn [\n  {\n    json: {\n      result:      hasValidImage,    // true / false\n      image:       imageToUse,       // the URL you want\n      usedUpload:  uploadImage !== \"\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "d07ed572-9b8f-4aa3-9c63-e99811ae1aab",
+      "name": "Check-image-if-empty"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ImageCreation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        -100
+      ],
+      "id": "89214dcd-32b4-4708-bfa1-abc77333fb7e",
+      "name": "Webhook",
+      "webhookId": "bbfc82d2-9737-4a67-9214-4fcb90459e74"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        100
+      ],
+      "id": "374f8ca5-0e16-41b3-98ef-9e7624983e5c",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "image_processing"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        -100
+      ],
+      "id": "e5070a7c-3834-4740-a8d9-72dd96ca683a",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"in_progress\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -140,
+        220
+      ],
+      "id": "2c4b0bf2-4ca3-471c-8223-bef200aab83e",
+      "name": "TM_SetStatus_Start",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_URL/webhook/VideoCreation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $('Webhook').item.json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        200
+      ],
+      "id": "b91393a4-24a3-45ad-8883-568c3d7cce5f",
+      "name": "TriggerWorkflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $json.data.url }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        -100
+      ],
+      "id": "263e1f13-b848-40b4-82a4-7faed94d3b21",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        -180
+      ],
+      "id": "92d80f00-d218-453d-9c3a-147d57b4c6cc",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger + Task  Manager Nods",
+        "height": 560,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -180
+      ],
+      "id": "d71e2f5f-de67-4840-bc3e-607c4b7582f9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Image Generation via OpenAI (Prompt-to-Image & Image-to-Image)\n\nThis flow uses OpenAI’s image generation APIs to produce stylized visuals based on user inputs and AI-enriched prompts.\n---\n\n#### 🧠 **Prompt Generation**\n- **Image Prompt Agent (LangChain):** Formats a vivid prompt using TM_GetStatus data (e.g., subject, lighting, style).\n- **OpenAI Chat Model:** GPT-4.1-mini powers prompt enhancement.\n- **Prompt Template:** Produces Pixar-style exaggerated descriptions tailored by exaggeration level and style.\n---\n\n#### 📐 **Image Format Mapping**\n- **Get Image format to OpenAI (Code Node):**\n  - Maps aspect ratio to image resolution:\n    - `1:1 → 1024x1024`\n    - `16:9 → 1536x1024`\n    - `9:16 → 1024x1536`\n---\n\n#### 🧪 **Condition Evaluation**\n- **Check-image-if-empty (Code Node):**\n  - Determines whether to use an existing uploaded image or fallback image.\n  - Outputs a boolean flag: `result = true/false`.\n\n- **If Node:**\n  - Routes logic:\n    - `true`: Calls `HTTP Request` to fetch uploaded image → then `Generate image 2 image`\n    - `false`: Triggers `Generate Image` (prompt-to-image)\n---\n\n#### 🎨 **Image Generation & Upload**\n- **Generate Image (Prompt-to-Image):**\n  - Calls `https://api.openai.com/v1/images/generations`\n  - Sends prompt, model (`gpt-image-1`), and resolution\n\n- **Generate image 2 image (Image-to-Image):**\n  - Uses `multipart/form-data` for image + prompt\n  - Works only if an input image was provided\n\n- **Convert to Binary:**\n  - Converts the image response into binary format\n\n- **File Upload:**\n  - Uploads the binary image file using `PiAPI`\n---\n\n📌 **Important Logic Summary:**\n- Input data from TM_GetStatus defines scene and subject\n- Conditional branching enables both prompt-only and image-enhanced generation\n- Supports fallback behavior and format compliance\n\n🚀 This flow powers AI-generated visuals with professional creative fidelity, enriched by prompt templates and OpenAI image APIs.\n",
+        "height": 1300,
+        "width": 1740
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        400
+      ],
+      "id": "5801a401-bd3b-4fea-9940-641aa7edfbe3",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Binary": {
+      "main": [
+        [
+          {
+            "node": "File Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Prompt Agent": {
+      "main": [
+        [
+          {
+            "node": "Get Image format to OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Prompt Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Upload": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image format to OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Check-image-if-empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate image 2 image": {
+      "main": [
+        [
+          {
+            "node": "Convert to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Generate image 2 image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check-image-if-empty": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_Start": {
+      "main": [
+        [
+          {
+            "node": "Image Prompt Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_COMPLETE": {
+      "main": [
+        [
+          {
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e03e9a41-5e2d-4bb5-8d1f-6695172ca1f0",
+  "meta": {
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "PlsWGIkF9oc0juKm",
+  "tags": []
+}

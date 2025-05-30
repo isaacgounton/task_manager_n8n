@@ -1,0 +1,618 @@
+{
+  "name": "05. VL: Lipsync Creation",
+  "nodes": [
+    {
+      "parameters": {
+        "errorMessage": "Failed to generate"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -80
+      ],
+      "id": "c1676218-70b8-4a1f-a1cc-df49db9af3cd",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/tavus/hummingbird-lipsync/v0",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "video_url",
+              "value": "={{ $('TM_GetStatus').item.json.result.Video_RES }}"
+            },
+            {
+              "name": "audio_url",
+              "value": "={{ $('TM_GetStatus').item.json.result.Audio_MP3 }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -220
+      ],
+      "id": "ea561783-65fc-49ea-bb74-96a2c2b9642f",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "oTFKcddxPNOPao4i",
+          "name": "FAL"
+        },
+        "httpHeaderAuth": {
+          "id": "bHG2g46UMczibWKL",
+          "name": "FAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/tavus/requests/{{ $json.request_id }}/status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -160
+      ],
+      "id": "f9ed1cb1-199d-456f-aeda-5bbcd5508e22",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "oTFKcddxPNOPao4i",
+          "name": "FAL"
+        },
+        "httpHeaderAuth": {
+          "id": "bHG2g46UMczibWKL",
+          "name": "FAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        -220
+      ],
+      "id": "d1d9eb6e-625f-48c4-92bc-3ff4fcbcf0fb",
+      "name": "Wait1",
+      "webhookId": "ed2e397a-8481-44b9-9734-d0d5b04dd0b4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a8fbd35-bd7c-4a22-ba7f-f4807ad2d023",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "FALSE",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1240,
+        -220
+      ],
+      "id": "d9eabe89-122b-4a0f-9863-ffcd0297c5e2",
+      "name": "If if failed drop error1"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/tavus/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1580,
+        -260
+      ],
+      "id": "0b320328-8f03-4377-abe6-4bae08b054f6",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "oTFKcddxPNOPao4i",
+          "name": "FAL"
+        },
+        "httpHeaderAuth": {
+          "id": "bHG2g46UMczibWKL",
+          "name": "FAL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\nconst out = {};\n\n// pick the best video URL:\nout.video_lipsync =\n  $input.item.json.data?.output_works?.[0]?.video?.resource_without_watermark\n  || $input.item.json.video?.url\n;\n\nreturn [{ json: out }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        -120
+      ],
+      "id": "6cea0d3e-2df3-4870-9da8-ca8b91377d3d",
+      "name": "Check which workflow value and normalize"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "942fe1b6-ef35-4c8a-9a3d-4e501c01c970",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "COMPLETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1420,
+        -260
+      ],
+      "id": "58c7d24d-d83b-4e5f-9c34-871fbf6e592d",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 560,
+        "width": 1300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        -380
+      ],
+      "id": "b1a0a9f1-9799-460e-899a-ec1817715bb4",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This will take every incoming n8n item, pull off `.json.body`\n// and return it as the new `json` for that item.\n\nreturn items.map(item => ({\n  json: item.json.body\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        -220
+      ],
+      "id": "8d433b63-3e9a-427f-919e-769f4c801028",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "LipsyncCreation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -300
+      ],
+      "id": "25909ef7-f323-42b3-ba3c-a4f6ef0447a4",
+      "name": "Webhook",
+      "webhookId": "f7ef851a-93de-4fd0-b570-009c73204b89"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        -100
+      ],
+      "id": "d820276d-7f6b-4c72-939d-3e7571bcc75e",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "lipsync_processing"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        -300
+      ],
+      "id": "3a1ad9b3-c552-4347-b9ba-b298ebbcac9c",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"in_progress\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        20
+      ],
+      "id": "da2030d4-8942-4cf5-acb8-75e3107c8af1",
+      "name": "TM_SetStatus_Start",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Trigger + Task  Manager Nods",
+        "height": 560,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        20,
+        -380
+      ],
+      "id": "855e3c77-c352-428c-9bda-bc733dcb1146",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_URL/webhook/ca78f329-830c-4b0d-adf1-8671c47ab6ba",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        0
+      ],
+      "id": "4c63e44b-cf2e-4358-981f-164edb49149b",
+      "name": "TriggerWorkflow",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $('TM_GetStatus').item.json.result['Final_Image'] }}\",\n          \"Video_RES\":\"{{ $('TM_GetStatus').item.json.result['Video_RES'] }}\",\n          \"Video_Lipsync\": \"{{ $json.video_lipsync }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        -300
+      ],
+      "id": "29190b9f-b9c8-4d1f-ac97-e6599a939b3a",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        -380
+      ],
+      "id": "1a166c9c-ad7c-4782-99ec-bd086aafd3c5",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### Lipsync Generation via FAL (Tavus)\n\nThis sequence integrates video and audio assets into a **lipsynced animation** using the FAL Tavus API.\n---\n\n#### 🔗 API Interaction\n- **HTTP Request (Initial):**\n  - Endpoint: `https://queue.fal.run/fal-ai/tavus/hummingbird-lipsync/v0`\n  - Sends:\n    - `video_url`: from `TM_GetStatus → Video_RES`\n    - `audio_url`: from `TM_GetStatus → Audio_MP3`\n---\n\n#### 🧾 Response Handling\n- **Code Node (Unwrap Response):**\n  - Extracts `.body` from the full HTTP response into usable format\n---\n\n#### 🔁 Status Polling Flow\n- **HTTP Request1 (Status Check):**\n  - Checks `status` via request ID (`.../requests/{request_id}/status`)\n- **Wait1:**\n  - Waits 30 seconds between status checks\n- **If3 (Status == COMPLETED):**\n  - Proceeds to fetch final asset details\n- **If if failed drop error1:**\n  - If status is `!= FAILED` → retry\n  - If status is `FAILED` → route to **Stop and Error**\n---\n\n#### 📥 Final Result Normalization\n- **HTTP Request2:**\n  - Fetches final video data via `request_id`\n- **Check which workflow value and normalize (Code Node):**\n  - Extracts best video output:\n    - `video.resource_without_watermark` (preferred)\n    - fallback to `video.url`\n---\n\n#### ❌ Error Control\n- **Stop and Error:**\n  - Stops execution with message: `\"Failed to generate\"` if lipsync fails completely\n---\n\n📌 **End Result:**  \nReturns a **lipsynced video URL** that merges character animation with generated narration.\n\n🛡️ **Highly fault-tolerant**: includes retry loops, multiple condition checks, and fallback outputs for graceful failure handling.\n",
+        "height": 1100,
+        "width": 1300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        520,
+        200
+      ],
+      "id": "da5c6bc1-3796-4d2c-a3b7-fb0f012d45a1",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "If if failed drop error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If if failed drop error1": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Check which workflow value and normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check which workflow value and normalize": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_Start": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_COMPLETE": {
+      "main": [
+        [
+          {
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "418fe047-342b-4c90-b8fc-88630fc703a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "SEprtLftE2G5upzA",
+  "tags": []
+}

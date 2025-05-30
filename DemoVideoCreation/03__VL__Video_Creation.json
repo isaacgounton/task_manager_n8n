@@ -1,0 +1,609 @@
+{
+  "name": "03. VL: Video Creation",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Generate the video prompt based on input prompt. \n- Upload the generated image in step 1 to OpenAI and ask for a description and to add camera movement and scene dinamic.",
+        "height": 560,
+        "width": 980
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        -400
+      ],
+      "id": "9a6c7c4c-7623-4b19-844e-373560a652ac",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "imageUrl": "={{ $('TM_GetStatus').item.json.result.Final_Image }}",
+        "prompt": "={{ $json.content }}",
+        "aspectRatio": "9:16"
+      },
+      "type": "n8n-nodes-piapi.klingImageToVideo",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        -200
+      ],
+      "id": "431377ac-8b25-4c49-8bd8-5793b442523b",
+      "name": "Kling Image to Video",
+      "credentials": {
+        "piAPIApi": {
+          "id": "tLdUHTT1TxJrmvCo",
+          "name": "PiAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "taskId": "={{ $json.task_id }}"
+      },
+      "type": "n8n-nodes-piapi.piAPITaskStatus",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -260
+      ],
+      "id": "50331fa2-0db7-47a8-85d0-fa395ddda80e",
+      "name": "PiAPI Task Status",
+      "credentials": {
+        "piAPIApi": {
+          "id": "tLdUHTT1TxJrmvCo",
+          "name": "PiAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.data.status }}",
+              "value2": "completed"
+            }
+          ]
+        }
+      },
+      "name": "IF (Image Ready)1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -80
+      ],
+      "id": "3a036dd4-700d-4c46-89a2-025d4bdab6ec",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "notesInFlow": true,
+      "notes": "Error Occured on image generation"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -280,
+        -260
+      ],
+      "id": "9b180e35-ce2f-4430-a5db-f1f1f4485c05",
+      "name": "Wait",
+      "webhookId": "f4f96d54-6ec0-4798-bb6d-bc8808af9b1c"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "What's in this image? Add to the final output a camera motion (random) and anaction to the scene (random). Do not mention random camera motion or random action, just implement into the promt as a natural language",
+        "imageUrls": "={{ $('TM_GetStatus').item.json.result.Final_Image }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -880,
+        -280
+      ],
+      "id": "4c68b6aa-3a08-472a-b81b-07e51739efc0",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "P2h6EXER26otjoyl",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+                    "rightValue": "Kling",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3f10bc16-f598-4fa2-bc70-2f24c2adef9e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Kling"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "45ee53b0-6db1-4da3-a515-60b688254618",
+                    "leftValue": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+                    "rightValue": "Veo2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Veo2"
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -820,
+        -60
+      ],
+      "id": "073b7cbe-5c58-4d2d-989d-80fed657e832",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "errorMessage": "Failed to generate"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        20
+      ],
+      "id": "aa761d78-28e8-4e1e-bcfa-a7049fa5e6c9",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3a8fbd35-bd7c-4a22-ba7f-f4807ad2d023",
+              "leftValue": "={{ $json.data.status }}",
+              "rightValue": "failed",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -120,
+        -260
+      ],
+      "id": "eed68d28-3796-4082-b321-f2408cc3c918",
+      "name": "If if failed drop error"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "VideoCreation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        -260
+      ],
+      "id": "f99e12bf-9935-4d11-81b2-460bae3012a7",
+      "name": "Webhook",
+      "webhookId": "ca78f329-830c-4b0d-adf1-8671c47ab6ba"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1260,
+        -60
+      ],
+      "id": "92436d02-e6b1-409d-a629-6e66f2ea3827",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "video_processing"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1160,
+        -260
+      ],
+      "id": "0fb320a4-e7f0-43ee-a4a7-bd2f685956e5",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"in_progress\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1100,
+        20
+      ],
+      "id": "8eda15eb-0517-40c0-8d2d-b99537aae526",
+      "name": "TM_SetStatus_Start",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_URL/webhook/AudioCreation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $('Webhook').item.json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        140,
+        -40
+      ],
+      "id": "ae773249-01f3-4910-9b2e-fce94834ed44",
+      "name": "TriggerWorkflow"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger + Task  Manager Nods",
+        "height": 560,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1400,
+        -400
+      ],
+      "id": "47e3ba58-ebdc-4687-87ab-2c0b8ffc3c36",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -400
+      ],
+      "id": "6e79be9f-94d4-448c-899b-0d6dddedca9c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $('TM_GetStatus').item.json.result['Final_Image'] }}\",\n          \"Video_RES\":\"{{ $json.data.output.video_url }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        -280
+      ],
+      "id": "31c25dbc-55e7-4da0-8ded-aff7ae309584",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Kling Image-to-Video Animation (with AI Motion Prompt)\n\nThis flow converts a **final image** into a stylized **video** using PiAPI (Kling), with animated motion prompts generated by OpenAI.\n---\n\n#### 🧠 **AI Motion Prompt**\n- **OpenAI Node:**\n  - Analyzes the `Final_Image` using `chatgpt-4o-latest`\n  - Generates a motion-aware video prompt\n  - Adds dynamic **camera movement** and **scene action** naturally\n---\n\n#### 🧠 **Model Routing**\n- **Switch Node:**\n  - Branches based on `\"Choose model for Video\"` field from `TM_GetStatus`\n  - Currently routes to **Kling**, with support for future models like `Veo2`\n---\n\n#### 🎞️ **Video Generation**\n- **Kling Image to Video Node:**\n  - Uses prompt and image to generate video (aspect ratio `9:16`)\n  - Starts the async task and returns `task_id`\n---\n\n#### ⏳ **Status Polling**\n- **PiAPI Task Status + Wait + Retry:**\n  - Checks task status in a loop\n  - If still not `completed`, it waits 60 seconds and retries (max 5 tries)\n\n- **IF (Image Ready):**\n  - If status is `completed` → proceed\n  - Else → re-check status after wait\n\n- **If if failed drop error:**\n  - If status is not `\"failed\"` → continue retry loop\n  - If status is `\"failed\"` → route to **Stop and Error**\n---\n\n#### ❌ **Error Handling**\n- **Stop and Error:**\n  - Terminates the flow if video generation failed\n  - Displays `Failed to generate` error to execution log\n---\n\n📌 **Flow Purpose Summary:**\n- Enables animated video output from static caricature images\n- Adds realistic motion prompts for cinematic video output\n- Ensures task completion before continuing\n",
+        "height": 1120,
+        "width": 980
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        180
+      ],
+      "id": "333312da-9362-4eb3-92c4-62b65a1486cd",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Kling Image to Video": {
+      "main": [
+        [
+          {
+            "node": "PiAPI Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PiAPI Task Status": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF (Image Ready)1": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PiAPI Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "If if failed drop error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Kling Image to Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If if failed drop error": {
+      "main": [
+        [
+          {
+            "node": "IF (Image Ready)1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_Start": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_COMPLETE": {
+      "main": [
+        [
+          {
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "09a18f40-98bd-498d-8799-8a1f70985a83",
+  "meta": {
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "TUSNFzOZD5wOjYxY",
+  "tags": []
+}

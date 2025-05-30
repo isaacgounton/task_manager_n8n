@@ -87,7 +87,7 @@
     },
     {
       "parameters": {
-        "content": "# Update Task Workflow\n\nThis workflow is designed to handle updates to a task via a webhook endpoint. The incoming request provides task updates, which are processed, conditionally checked, updated in a PostgreSQL database, and responded to with success or error messages.\n\n📬 1. Webhook – Webhook - Update Task\nNode Type: Webhook\nMethod: POST\nPath: /update-task/:taskId\nResponse Mode: responseNode\n\n🔍 Purpose:\nThis webhook listens for HTTP POST requests at the endpoint:\n/webhook/update-task/:taskId\n\n## Supported Fields:\n- status: 'pending' | 'in_progress' | 'completed' | 'failed'\n- result: JSON object with results\n- error_message: String with error details\n- metadata: JSON object with custom data\n- attempt_count: Number\n\n## Example:\n```bash\ncurl -X POST /webhook/update-task/TASK-123 \\\n  -H \"Authorization: API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"status\": \"completed\",\n    \"result\": {\"success\": true}\n  }'\n```\n\n✅ Use Cases\nUpdating task statuses from external services or microservices.\nLogging retry attempts or error metadata in task execution.\nProviding a RESTful endpoint to interact with Supabase-managed task data.",
+        "content": "# Update Task Workflow\n\nThis workflow is designed to handle updates to a task via a webhook endpoint. The incoming request provides task updates, which are processed, conditionally checked, updated in a PostgreSQL database, and responded to with success or error messages.\n\n📬 1. Webhook – Webhook - Update Task\nNode Type: Webhook\nMethod: POST\nPath: /update-task/:taskId\nResponse Mode: responseNode\n\n🔍 Purpose:\nThis webhook listens for HTTP POST requests at the endpoint:\n/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/:taskId\n\n## Supported Fields:\n- status: 'pending' | 'in_progress' | 'completed' | 'failed'\n- result: JSON object with results\n- error_message: String with error details\n- metadata: JSON object with custom data\n- attempt_count: Number\n\n## Example:\n```bash\ncurl -X POST https://URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/:taskId \\\n  -H \"Authorization: API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"status\": \"completed\",\n    \"result\": {\"success\": true}\n  }'\n```\n\n✅ Use Cases\nUpdating task statuses from external services or microservices.\nLogging retry attempts or error metadata in task execution.\nProviding a RESTful endpoint to interact with Supabase-managed task data.",
         "height": 840,
         "width": 1000
       },
@@ -349,7 +349,7 @@
     "executionOrder": "v1",
     "errorWorkflow": "kByCQTr1nYAUTU2a"
   },
-  "versionId": "176f1d64-1e1c-4d7b-8814-0720957115b7",
+  "versionId": "14e5a518-f35f-4beb-a279-00b54c819bf3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"

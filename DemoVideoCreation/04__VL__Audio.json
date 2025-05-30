@@ -1,0 +1,364 @@
+{
+  "name": "04. VL: Audio",
+  "nodes": [
+    {
+      "parameters": {
+        "text": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
+        "voice_id": {
+          "__rl": true,
+          "value": "={{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}",
+          "mode": "id"
+        },
+        "additionalFields": {
+          "file_name": "={{ $('TM_GetStatus').item.json.result.TaskID }}.mp3"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-elevenlabs-enhanced.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -60
+      ],
+      "id": "0222d88b-cea3-42a1-af1f-4502c528b723",
+      "name": "ElevenLabs",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "iOvpLcJK0VkN7XCL",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-piapi.fileUpload",
+      "typeVersion": 1,
+      "position": [
+        540,
+        220
+      ],
+      "id": "e08c0000-0a1a-437a-b006-bf63558ace1b",
+      "name": "File Upload1",
+      "credentials": {
+        "piAPIApi": {
+          "id": "tLdUHTT1TxJrmvCo",
+          "name": "PiAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 560,
+        "width": 340
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -180
+      ],
+      "id": "c774aa5d-a56b-4a95-8c56-c7d217a4682f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### ElevenLabs Text-to-Speech + Audio Upload\n\nThis flow takes the `\"Sound Text\"` from the form or TM_GetStatus, generates an audio narration using ElevenLabs, and uploads the `.mp3` result.\n---\n\n#### 🗣️ **Voice Generation**\n- **Node:** `ElevenLabs`\n- **Input Text:** Pulled from `TM_GetStatus → Sound Text`\n- **Voice ID:** Configurable (e.g., `\"Vivie\"` or any voice selected in the dropdownm by ID)\n- **Output File Name:** Named after the `TaskID` for traceability (e.g., `abc123.mp3`)\n---\n\n#### 📤 **Audio Upload**\n- **Node:** `File Upload1` (PiAPI)\n- **Function:** Uploads the generated `.mp3` voice file to asset server or workflow output system\n---\n\n📌 **Key Considerations:**\n- Ensure the `\"Sound Text\"` is well-formed; ElevenLabs expects grammatically correct inputs\n- Voice selection is dynamic based on `voice_id` field\n- File uploads follow immediately after generation, enabling downstream use (e.g., lipsync or video narration)\n\n✅ This flow enables **automated, human-like narration** generation for multimedia tasks.\n",
+        "height": 580,
+        "width": 1140
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        400
+      ],
+      "id": "67e6bd91-49eb-4280-b1f2-15b87f42c0ce",
+      "name": "Sticky Note - Overview"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_URL/webhook/LipsyncCreation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $('Webhook').item.json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        820,
+        180
+      ],
+      "id": "92d7131f-43d6-4e88-ba06-c1ce78f3d55d",
+      "name": "TriggerWorkflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $('TM_GetStatus').item.json.result['Final_Image'] }}\",\n          \"Video_RES\":\"{{ $('TM_GetStatus').item.json.result.Video_RES }}\",\n          \"Audio_MP3\":\"{{ $json.data.url }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        -60
+      ],
+      "id": "19327005-3411-428a-9dcd-2507559bb8ca",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 280,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        760,
+        -180
+      ],
+      "id": "2b78d920-b2e3-45ff-a1e8-0253daa21443",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        160
+      ],
+      "id": "5a44117b-1e91-48ea-aa46-415e520a5172",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "audio_processing"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        140,
+        -40
+      ],
+      "id": "5cf5eefb-4b16-45d6-9712-71509ca015bd",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"status\": \"in_progress\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        240
+      ],
+      "id": "3f3cad6c-2b25-45e2-a785-97e17594e3cd",
+      "name": "TM_SetStatus_Start",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Trigger + Task  Manager Nods",
+        "height": 560,
+        "width": 460,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -100,
+        -180
+      ],
+      "id": "86e8a6fe-3bb6-40ed-8124-026c34269bd5",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "AudioCreation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -60,
+        -40
+      ],
+      "id": "d67df484-6845-4e23-8f6e-e2a7cfd356a8",
+      "name": "Webhook",
+      "webhookId": "30ceee44-edc6-4a8c-93d9-1440446cbb3d"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "ElevenLabs": {
+      "main": [
+        [
+          {
+            "node": "File Upload1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Upload1": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_COMPLETE": {
+      "main": [
+        [
+          {
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SetStatus_Start": {
+      "main": [
+        [
+          {
+            "node": "ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "48236731-afb4-4a5d-a8d9-4a4254a12273",
+  "meta": {
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "Wz9lPeoG2UwT6DhH",
+  "tags": []
+}

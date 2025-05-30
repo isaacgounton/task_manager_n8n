@@ -1,0 +1,382 @@
+{
+  "name": "N8N Task Manager Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Create task ",
+        "height": 340,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -440
+      ],
+      "id": "77a37e8b-a414-4a92-a5ab-893f3556ecae",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Get Task Status \n",
+        "height": 300,
+        "width": 980,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -80
+      ],
+      "id": "e184bea7-ba35-4ce3-87b8-3cde7a692e4d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Set Status \n",
+        "height": 220,
+        "width": 980,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        240
+      ],
+      "id": "7ab1c829-be64-4f08-929e-ff33ad63c61d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        -20
+      ],
+      "id": "b052f742-2d28-46aa-bc73-7dbe33bf984f",
+      "name": "START"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n\"base_url\": \"https://YOUR_URL\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -700,
+        -20
+      ],
+      "id": "d3fb736c-d27b-4bd3-b6e3-3fc1444033bf",
+      "name": "URL"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        120,
+        0
+      ],
+      "id": "d8a790da-fe01-4089-a156-9dfa54903cfe",
+      "name": "Wait",
+      "webhookId": "40be6ac4-fbc4-4670-9a3c-fe456c771a62"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ba5eebb5-29b2-40b5-9674-3d65d267c903",
+              "leftValue": "={{ $('TM_SIMPLE_NODE').item.json.status }}",
+              "rightValue": "completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        0
+      ],
+      "id": "3e15ebf0-1aa0-41e9-a6f7-ee51dedbc2a0",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "- in most of the cases you will use SIMPLE_NODE\n- You need to adjust on node GetStatus and SetStatus the unique URL like: /webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/ with your URL from webhooks.",
+        "height": 340,
+        "width": 440
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -440
+      ],
+      "id": "07d154d3-3e56-4c45-b244-a94e88ef894d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.base_url }}/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "external_id",
+              "value": "abc123"
+            },
+            {
+              "name": "poll_url",
+              "value": "https://api.service.com/job/abc123/status"
+            },
+            {
+              "name": "poll_method",
+              "value": "GET"
+            },
+            {
+              "name": "task_type",
+              "value": "data_processing"
+            },
+            {
+              "name": "max_attempts",
+              "value": "10"
+            },
+            {
+              "name": "timeout_minutes",
+              "value": "120"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        -420
+      ],
+      "id": "5102fc2b-be11-4967-8804-00b4740addc8",
+      "name": "TM_POLL_DATA",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.base_url }}/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "data_processing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        -240
+      ],
+      "id": "6ea6b24c-c743-4ad7-b331-307560dc4755",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('URL').item.json.base_url }}/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -100,
+        0
+      ],
+      "id": "be79c299-17e5-42fd-9f18-41f3f4b9f508",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('URL').item.json.base_url }}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"status\": \"completed\",\n    \"result\": {\"success\": true}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -140,
+        300
+      ],
+      "id": "98b7a544-8bbf-4021-b84e-a0f2a5ec47b2",
+      "name": "TM_SetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "START": {
+      "main": [
+        [
+          {
+            "node": "URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL": {
+      "main": [
+        [
+          {
+            "node": "TM_POLL_DATA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_POLL_DATA": {
+      "main": [
+        []
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TM_SetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "387bdd3a-519c-4ab8-8148-9b762ef72108",
+  "meta": {
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  },
+  "id": "O2dmPge6WG7xYrFQ",
+  "tags": []
+}

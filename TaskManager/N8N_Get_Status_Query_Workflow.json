@@ -1,5 +1,5 @@
 {
-  "name": "N8N Status Query Workflow",
+  "name": "N8N Get Status Query Workflow",
   "nodes": [
     {
       "parameters": {
@@ -20,7 +20,7 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "ls9itmRH8ZrWv4rJ",
-          "name": "TaskManager"
+          "name": "TaskManager DEMO AUTH"
         }
       }
     },
@@ -42,7 +42,7 @@
     },
     {
       "parameters": {
-        "content": "# Status Query Workflow\n\nThis n8n workflow creates a secure REST API endpoint that allows clients to query the status of a task by providing the taskId. It is ideal for polling or retrieving real-time status and result data of asynchronous background jobs.\n\n🔗 Endpoint Summary\nHTTP Method: GET\nEndpoint: /webhook/task-status/:taskId\nAuthentication: HeaderAuth (Authorization: API_KEY)\nResponse Type: JSON\nResponse Code:\n200 → Task found (any state)\n404 → Task ID not found\n\nRequest:\n```json\ncurl -X GET https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/dd69a407-82f2-4d64-ba9b-a47af52dc0ee \\\n-H \"Authorization: API_KEY\"\n```\n\nSuccessful Response Example (200 OK):\n\n```json\n[{\n  \"task_id\": \"dd69a407-82f2-4d64-ba9b-a47af52dc0ee\",\n  \"status\": \"completed\",\n  \"external_id\": \"job-123\",\n  \"poll_url\": \"https://api.example.com/job/123/status\",\n  \"poll_method\": \"GET\",\n  \"task_type\": \"data_processing\",\n  \"result\": null,\n  \"error_message\": null,\n  \"created_at\": \"2025-05-26T10:34:39.633Z\",\n  \"updated_at\": \"2025-05-26T11:05:43.918Z\",\n  \"attempt_count\": 10,\n  \"max_attempts\": 10,\n  \"timeout_minutes\": 60,\n  \"metadata\": {},\n  \"user_id\": null\n}]\n```\n\nNot Found Example (404):\n\n```json\n{\n  \"error\": \"Task ID not found.\"\n}\n```",
+        "content": "# Status Query Workflow\n\nThis n8n workflow creates a secure REST API endpoint that allows clients to query the status of a task by providing the taskId. It is ideal for polling or retrieving real-time status and result data of asynchronous background jobs.\n\n🔗 Endpoint Summary\nHTTP Method: GET\nEndpoint: /webhook/task-status/:taskId\nAuthentication: HeaderAuth (Authorization: API_KEY)\nResponse Type: JSON\nResponse Code:\n200 → Task found (any state)\n404 → Task ID not found\n\nRequest:\n```json\ncurl -X GET https://URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/dd69a407-82f2-4d64-ba9b-a47af52dc0ee \\\n-H \"Authorization: API_KEY\"\n```\n\nSuccessful Response Example (200 OK):\n\n```json\n[{\n  \"task_id\": \"dd69a407-82f2-4d64-ba9b-a47af52dc0ee\",\n  \"status\": \"completed\",\n  \"external_id\": \"job-123\",\n  \"poll_url\": \"https://api.example.com/job/123/status\",\n  \"poll_method\": \"GET\",\n  \"task_type\": \"data_processing\",\n  \"result\": null,\n  \"error_message\": null,\n  \"created_at\": \"2025-05-26T10:34:39.633Z\",\n  \"updated_at\": \"2025-05-26T11:05:43.918Z\",\n  \"attempt_count\": 10,\n  \"max_attempts\": 10,\n  \"timeout_minutes\": 60,\n  \"metadata\": {},\n  \"user_id\": null\n}]\n```\n\nNot Found Example (404):\n\n```json\n{\n  \"error\": \"Task ID not found.\"\n}\n```",
         "height": 1080,
         "width": 1330
       },
@@ -365,7 +365,7 @@
     "executionOrder": "v1",
     "errorWorkflow": "kByCQTr1nYAUTU2a"
   },
-  "versionId": "14d394d2-4c31-45ce-831b-12eb5ae1f35f",
+  "versionId": "a58a478d-a5a2-4033-a775-a006cfe7e663",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
