@@ -127,6 +127,39 @@ const TaskViewer: React.FC = () => {
     return media
   }
 
+  const calculateRunningTime = (startTime: string, endTime?: string): string => {
+    const start = new Date(startTime)
+    const end = endTime ? new Date(endTime) : new Date()
+    const diffMs = end.getTime() - start.getTime()
+    
+    const seconds = Math.floor(diffMs / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`
+    } else {
+      return `${seconds}s`
+    }
+  }
+
+  const calculateTotalRunningTime = (tasks: Task[]): string => {
+    if (tasks.length === 0) return '0s'
+    
+    const sortedTasks = tasks.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    const firstTask = sortedTasks[0]
+    const lastTask = sortedTasks[sortedTasks.length - 1]
+    
+    const startTime = firstTask.created_at
+    const endTime = lastTask.status === 'completed' || lastTask.status === 'failed' 
+      ? lastTask.updated_at 
+      : undefined
+    
+    return calculateRunningTime(startTime, endTime)
+  }
+
   useEffect(() => {
     fetchTasks()
 
@@ -181,17 +214,29 @@ const TaskViewer: React.FC = () => {
 
         {selectedExternalId && groupedTasks[selectedExternalId] && (
           <div className="external-id-group">
-            <h2>External ID: {selectedExternalId}</h2>
+            <div className="external-id-header">
+              <h2>External ID: {selectedExternalId}</h2>
+              <div className="total-running-time">
+                Total Running Time: {calculateTotalRunningTime(groupedTasks[selectedExternalId])}
+              </div>
+            </div>
             <div className="tasks-container">
               {groupedTasks[selectedExternalId].slice().reverse().map((task, index) => {
                 const resultText = extractTextFromJSON(task.result)
                 const mediaUrls = extractMediaURLs(task.result)
                 const stepNumber = groupedTasks[selectedExternalId].length - index
+                const stepRunningTime = calculateRunningTime(
+                  task.created_at, 
+                  task.status === 'completed' || task.status === 'failed' ? task.updated_at : undefined
+                )
                 
                 return (
                 <div key={task.task_id} className="task-card">
                   <div className="task-header">
-                    <h3>Step {stepNumber}: {task.task_id}</h3>
+                    <div className="task-title">
+                      <h3>Step {stepNumber}: {task.task_id}</h3>
+                      <div className="step-running-time">Running time: {stepRunningTime}</div>
+                    </div>
                     <span className={`status ${getStatusColor(task.status)}`}>
                       {task.status}
                     </span>
