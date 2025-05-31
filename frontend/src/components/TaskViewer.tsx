@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase, Task } from '../lib/supabase'
 import './TaskViewer.css'
 
@@ -9,6 +10,8 @@ interface GroupedTask {
 }
 
 const TaskViewer: React.FC = () => {
+  const { externalId: urlExternalId } = useParams<{ externalId: string }>()
+  const navigate = useNavigate()
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -366,12 +369,30 @@ const TaskViewer: React.FC = () => {
   const groupedTasks = groupTasksByExternalId()
   const categorizedTasks = categorizeTasksByTime(displayedTasks)
 
-  // Auto-select first external ID if none selected
+  // Handle URL external ID
   useEffect(() => {
-    if (!selectedExternalId && displayedTasks.length > 0) {
+    if (urlExternalId && displayedTasks.some(task => task.external_id === urlExternalId)) {
+      setSelectedExternalId(urlExternalId)
+    } else if (!selectedExternalId && displayedTasks.length > 0) {
+      // Auto-select first external ID if none selected
       setSelectedExternalId(displayedTasks[0].external_id)
     }
-  }, [displayedTasks, selectedExternalId])
+  }, [urlExternalId, displayedTasks, selectedExternalId])
+
+  // Update URL when external ID is selected
+  const handleExternalIdClick = (externalId: string) => {
+    setSelectedExternalId(externalId)
+    navigate(`/${externalId}`)
+  }
+
+  // Update page title based on selected external ID
+  useEffect(() => {
+    if (selectedExternalId) {
+      document.title = `Task Manager - ${selectedExternalId}`
+    } else {
+      document.title = 'Task Manager - Process Monitor'
+    }
+  }, [selectedExternalId])
 
   if (loading && tasks.length === 0) {
     return <div className="loading">Loading tasks...</div>
@@ -395,7 +416,7 @@ const TaskViewer: React.FC = () => {
                 key={groupedTask.external_id}
                 ref={isLastItem ? lastTaskElementRef : undefined}
                 className={`external-id-item ${selectedExternalId === groupedTask.external_id ? 'active' : ''}`}
-                onClick={() => setSelectedExternalId(groupedTask.external_id)}
+                onClick={() => handleExternalIdClick(groupedTask.external_id)}
               >
                 <div className="external-id-header-row">
                   <span className="external-id-name">{groupedTask.external_id}</span>
@@ -417,7 +438,7 @@ const TaskViewer: React.FC = () => {
   return (
     <div className="task-viewer">
       <div className="sidebar">
-        <div className="sidebar-header">
+        <div className="sidebar-header" onClick={() => urlExternalId && navigate('/')} style={{ cursor: urlExternalId ? 'pointer' : 'default' }}>
           <img src="/task-manager-logo.png" alt="" className="logo" />
           <h2>Task Manager</h2>
         </div>

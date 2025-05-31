@@ -1,12 +1,18 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TaskViewer from './components/TaskViewer';
 import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <TaskViewer />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<TaskViewer />} />
+          <Route path="/:externalId" element={<TaskViewer />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -35,6 +35,11 @@
   font-weight: 600;
 }
 
+.sidebar-header:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
 .search-container {
   padding: 15px 20px;
   position: relative;
