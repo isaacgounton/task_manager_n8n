@@ -165,6 +165,184 @@ If you want a visual interface to monitor your tasks:
 
 Note: Make sure you've configured the `.env` file with your Supabase credentials before starting
 
+## Task Manager Node Configuration
+
+### Important: Webhook URL Configuration
+
+When setting up Task Manager nodes in n8n workflows, it's crucial to verify and update the webhook URLs in trigger nodes:
+
+1. **Create Task Webhook**
+   - Default pattern: `webhook/create-task`
+   - Used in the Create Task workflow
+
+2. **Update Task Webhook (SetStatus)**
+   - Pattern: `webhook/{UUID}/update-task/`
+   - Example: `webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/`
+   - **IMPORTANT**: Check and update the UUID in your workflow - it may differ from the example
+
+3. **Get Status Webhook (GetStatus)**
+   - Pattern: `webhook/{UUID}/task-status/`
+   - Example: `webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/`
+   - **IMPORTANT**: Check and update the UUID in your workflow - it may differ from the example
+
+### Step 1: Verify Webhook URLs
+Before using any Task Manager workflow:
+1. Open each webhook trigger node
+2. Check the webhook URL path
+3. Update the UUID portion if needed to match your n8n instance
+4. Ensure the webhook is active and accessible
+
+## Creating Tasks with Proper Configuration
+
+When setting up a Create Task workflow, it's essential to include two key parameters for proper task identification and tracking:
+
+### Required Parameters
+
+1. **task_type** - A descriptive identifier for the type of operation
+   - Examples: `"image_creation"`, `"video_creation"`, `"excel_file_extract"`, `"data_processing"`
+   - This helps categorize and filter tasks in monitoring
+
+2. **external_id** - A unique identifier for the entire job
+   - Must be unique across all tasks
+   - Used to track a job through multiple stages
+
+### Generating Unique External IDs
+
+Use the `GenerateUniqueID` code node from the demo workflows to create random 16-character alphanumeric IDs:
+
+```javascript
+// Generate random 16-character alphanumeric string and assign it to 'external_id'
+for (const item of $input.all()) {
+    item.json.external_id = [...Array(16)]
+        .map(() => Math.random().toString(36)[2])
+        .join('');
+}
+
+return $input.all();
+```
+
+### Example Task Creation Request
+
+```json
+{
+  "task_type": "excel_file_extract",
+  "external_id": "a7b3x9m2p5q8r1t6",
+  "poll_url": "https://api.example.com/status/job123",
+  "max_attempts": 10
+}
+```
+
+This configuration ensures your tasks are properly categorized and can be tracked throughout their lifecycle.
+
+### Important: Task Status Management
+
+The Task Manager system uses four status values to track task lifecycle:
+
+- **pending** - Initial status when a task is created
+- **in_progress** - Task is actively being processed
+- **completed** - Task finished successfully
+- **failed** - Task encountered an error and failed
+
+After creating a task, it's crucial to immediately update its status to `in_progress` before starting the actual workflow. This two-step process ensures proper task tracking:
+
+1. **Create the task** - The task is created with `pending` status
+2. **Update to in_progress** - Use the Update Task webhook to set status to `in_progress`
+3. **Execute your workflow** - Now start the actual work (API calls, processing, etc.)
+4. **Final status update** - Set to `completed` on success or `failed` on error
+
+This pattern prevents tasks from appearing stalled and provides accurate monitoring of active work.
+
+#### Example Status Updates
+
+After receiving a task_id from task creation:
+```json
+POST /webhook/{task-id}/update-task/
+{
+  "status": "in_progress"
+}
+```
+
+On successful completion:
+```json
+POST /webhook/{task-id}/update-task/
+{
+  "status": "completed",
+  "result": {
+    "output_url": "https://example.com/result.pdf",
+    "processing_time": "2m 34s"
+  }
+}
+```
+
+On failure:
+```json
+POST /webhook/{task-id}/update-task/
+{
+  "status": "failed",
+  "error": "API rate limit exceeded"
+}
+```
+
+### Task Completion Node Group
+
+To simplify task status updates at the end of your workflows, you can use a standardized node group that handles the final status update. This group consists of 5 connected nodes:
+
+1. **OutsideJSON** - Sets the status to "completed"
+2. **InsideJSON** - Collects all task results and metadata
+3. **CreateJSON** - Merges the status and results into a single JSON payload
+4. **TM_SetStatus_COMPLETE** - Updates the task status via the webhook
+5. **TriggerWorkflow** - Optionally triggers the next workflow in a chain
+
+#### Node Group Structure
+
+The node group performs these operations:
+
+1. **Prepare Status** (OutsideJSON node):
+   ```json
+   {
+     "status": "completed"
+   }
+   ```
+
+2. **Collect Results** (InsideJSON node):
+   - Gathers all relevant data from your workflow
+   - Includes task_id and any output data (URLs, metadata, etc.)
+
+3. **Merge Data** (CreateJSON node):
+   - Combines status and results into the required format:
+   ```json
+   {
+     "status": "completed",
+     "result": {
+       "task_id": "xxx",
+       "output_url": "https://...",
+       "processing_time": "2m 15s",
+       // ... other results
+     }
+   }
+   ```
+
+4. **Update Task Status** (TM_SetStatus_COMPLETE node):
+   - Makes a POST request to the update-task webhook
+   - Requires authentication credentials
+   - URL pattern: `webhook/{UUID}/update-task/{task_id}`
+
+5. **Trigger Next Workflow** (TriggerWorkflow node):
+   - After updating the task status, call the next workflow in your pipeline
+   - Use CreateTask endpoint for the next workflow
+   - Pass the current `task_id` and `external_id` for easy identification
+   - Example request:
+   ```json
+   POST /webhook/create-task
+   {
+     "TaskID": "{{ $json.task_id }}",
+     "external_id": "{{ $('Webhook').item.json.body.external_id }}",
+     "task_type": "next_processing_step"
+   }
+   ```
+
+This node group ensures consistent task completion across all workflows and makes it easy to chain multiple workflows together while maintaining traceability through the external_id.
+
 ## Support & Community
 
 For questions, support, or discussions about this project:
