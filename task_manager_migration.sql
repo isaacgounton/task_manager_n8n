@@ -59,3 +59,33 @@ CREATE POLICY "Enable delete for service role"
         auth.role() = 'service_role' OR
         auth.jwt()->>'role' = 'service_role'
     );
+
+-- ============================================
+-- SEARCH OPTIMIZATION INDEXES
+-- Added to improve search performance
+-- ============================================
+
+-- Index for external_id - used for grouping and filtering workflows
+CREATE INDEX IF NOT EXISTS idx_external_id ON task_manager(external_id);
+
+-- Index for task_type - enables fast filtering by task type
+CREATE INDEX IF NOT EXISTS idx_task_type ON task_manager(task_type);
+
+-- Index for updated_at - improves time-based queries and sorting
+CREATE INDEX IF NOT EXISTS idx_updated_at ON task_manager(updated_at);
+
+-- GIN index for JSONB result field - enables efficient searches within JSON data
+CREATE INDEX IF NOT EXISTS idx_result_gin ON task_manager USING GIN(result);
+
+-- Index for error_message - speeds up error searches
+CREATE INDEX IF NOT EXISTS idx_error_message ON task_manager(error_message);
+
+-- Composite index for common query patterns - optimizes status + time queries
+CREATE INDEX IF NOT EXISTS idx_status_updated_at ON task_manager(status, updated_at DESC);
+
+-- Composite index for external_id + time - optimizes workflow grouping with time sorting
+CREATE INDEX IF NOT EXISTS idx_external_id_updated_at ON task_manager(external_id, updated_at DESC);
+
+-- Full-text search index for error messages - enables fast text search in errors
+CREATE INDEX IF NOT EXISTS idx_error_message_fts ON task_manager 
+USING GIN(to_tsvector('english', COALESCE(error_message, '')));

@@ -17,6 +17,8 @@ const TaskViewer: React.FC = () => {
   const [displayedTasks, setDisplayedTasks] = useState<GroupedTask[]>([])
   const [hasMore, setHasMore] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
   const observer = useRef<IntersectionObserver | null>(null)
   const loadMoreTasks = useCallback(() => {
     if (loadingMore || !hasMore) return
@@ -58,6 +60,7 @@ const TaskViewer: React.FC = () => {
       if (error) throw error
 
       setTasks(data || [])
+      setFilteredTasks(data || [])
       setLastUpdated(new Date())
       setError(null)
     } catch (err) {
@@ -65,6 +68,37 @@ const TaskViewer: React.FC = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term)
+    
+    if (!term.trim()) {
+      setFilteredTasks(tasks)
+      return
+    }
+
+    const searchLower = term.toLowerCase()
+    const filtered = tasks.filter(task => {
+      // Search in task_type
+      if (task.task_type?.toLowerCase().includes(searchLower)) return true
+      
+      // Search in status
+      if (task.status.toLowerCase().includes(searchLower)) return true
+      
+      // Search in error_message
+      if (task.error_message?.toLowerCase().includes(searchLower)) return true
+      
+      // Search in result (JSON stringified)
+      if (task.result && JSON.stringify(task.result).toLowerCase().includes(searchLower)) return true
+      
+      // Search in external_id
+      if (task.external_id?.toLowerCase().includes(searchLower)) return true
+      
+      return false
+    })
+    
+    setFilteredTasks(filtered)
   }
 
   const formatDate = (dateString: string) => {
@@ -88,7 +122,7 @@ const TaskViewer: React.FC = () => {
 
   const groupTasksByExternalId = () => {
     const grouped: { [key: string]: Task[] } = {}
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
       const key = task.external_id || 'no_external_id'
       if (!grouped[key]) {
         grouped[key] = []
@@ -145,7 +179,7 @@ const TaskViewer: React.FC = () => {
       new Date(b.latest_task.updated_at || b.latest_task.created_at).getTime() - 
       new Date(a.latest_task.updated_at || a.latest_task.created_at).getTime()
     )
-  }, [tasks])
+  }, [filteredTasks])
 
   const extractTextFromJSON = (data: any): string => {
     if (!data) return ''
@@ -258,11 +292,15 @@ const TaskViewer: React.FC = () => {
   }, [])
 
   useEffect(() => {
+    handleSearch(searchTerm)
+  }, [tasks])
+
+  useEffect(() => {
     const allGroupedTasks = getGroupedTasksList()
     const initialBatch = allGroupedTasks.slice(0, 20)
     setDisplayedTasks(initialBatch)
     setHasMore(allGroupedTasks.length > 20)
-  }, [tasks])
+  }, [filteredTasks])
 
   const groupedTasks = groupTasksByExternalId()
   const categorizedTasks = categorizeTasksByTime(displayedTasks)
@@ -316,11 +354,47 @@ const TaskViewer: React.FC = () => {
           <h2>Task Manager</h2>
         </div>
         
+        <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search workflows..."
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+          />
+          {searchTerm && (
+            <button 
+              className="clear-search"
+              onClick={() => handleSearch('')}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        
         <div className="tasks-list">
-          {renderTaskGroup('Today', categorizedTasks.today)}
-          {renderTaskGroup('Yesterday', categorizedTasks.yesterday)}
-          {renderTaskGroup('Previous 7 Days', categorizedTasks.last7Days)}
-          {renderTaskGroup('Older', categorizedTasks.older, true)}
+          {searchTerm && displayedTasks.length > 0 && (
+            <div className="search-results-count">
+              Found {filteredTasks.length} workflow{filteredTasks.length !== 1 ? 's' : ''}
+            </div>
+          )}
+          
+          {displayedTasks.length === 0 && searchTerm && (
+            <div className="no-results">
+              <p>No workflows found matching "{searchTerm}"</p>
+              <p className="search-hint">Try searching for task type, status, or error messages</p>
+            </div>
+          )}
+          
+          {displayedTasks.length > 0 && (
+            <>
+              {renderTaskGroup('Today', categorizedTasks.today)}
+              {renderTaskGroup('Yesterday', categorizedTasks.yesterday)}
+              {renderTaskGroup('Previous 7 Days', categorizedTasks.last7Days)}
+              {renderTaskGroup('Older', categorizedTasks.older, true)}
+            </>
+          )}
           
           {loadingMore && (
             <div className="loading-more">

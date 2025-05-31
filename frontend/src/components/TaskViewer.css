@@ -35,6 +35,51 @@
   font-weight: 600;
 }
 
+.search-container {
+  padding: 15px 20px;
+  position: relative;
+  border-bottom: 1px solid #333;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 35px 10px 12px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  border-color: #3498db;
+  background-color: #333;
+}
+
+.search-input::placeholder {
+  color: #888;
+}
+
+.clear-search {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.clear-search:hover {
+  color: #ccc;
+}
+
 .tasks-list {
   flex: 1;
   overflow-y: auto;
@@ -104,6 +149,31 @@
   color: #555;
   font-size: 13px;
   opacity: 0.6;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+.no-results p {
+  margin: 10px 0;
+}
+
+.search-hint {
+  font-size: 13px;
+  color: #666;
+}
+
+.search-results-count {
+  padding: 10px 20px;
+  font-size: 13px;
+  color: #3498db;
+  text-align: center;
+  background-color: rgba(52, 152, 219, 0.1);
+  margin: 0 -20px 15px;
+  border-bottom: 1px solid #333;
 }
 
 /* Custom scrollbar for sidebar */
