@@ -236,12 +236,13 @@ This configuration ensures your tasks are properly categorized and can be tracke
 
 ### Important: Task Status Management
 
-The Task Manager system uses four status values to track task lifecycle:
+The Task Manager system uses five status values to track task lifecycle:
 
 - **pending** - Initial status when a task is created
 - **in_progress** - Task is actively being processed
 - **completed** - Task finished successfully
 - **failed** - Task encountered an error and failed
+- **cancelled** - Task was manually cancelled by user
 
 After creating a task, it's crucial to immediately update its status to `in_progress` before starting the actual workflow. This two-step process ensures proper task tracking:
 

@@ -70,6 +70,42 @@ const TaskViewer: React.FC = () => {
     }
   }
 
+  const handleCancelTask = async (taskId: string) => {
+    if (!window.confirm('Are you sure you want to cancel this task?')) {
+      return
+    }
+
+    try {
+      console.log('Attempting to cancel task:', taskId)
+      
+      const { data, error } = await supabase
+        .from('task_manager')
+        .update({ 
+          status: 'cancelled',
+          updated_at: new Date().toISOString(),
+          error_message: 'Cancelled from frontend'
+        })
+        .eq('task_id', taskId)
+        .select()
+
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
+
+      console.log('Update result:', data)
+
+      // Refresh tasks
+      await fetchTasks()
+      
+      // Show success message
+      alert(`Task ${taskId} cancelled successfully`)
+    } catch (err) {
+      console.error('Error cancelling task:', err)
+      alert(`Failed to cancel task: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    }
+  }
+
   const handleSearch = (term: string) => {
     setSearchTerm(term)
     
@@ -115,6 +151,8 @@ const TaskViewer: React.FC = () => {
         return 'status-in-progress'
       case 'pending':
         return 'status-pending'
+      case 'cancelled':
+        return 'status-cancelled'
       default:
         return ''
     }
@@ -340,7 +378,7 @@ const TaskViewer: React.FC = () => {
                   <span className="external-id-name">{groupedTask.external_id}</span>
                   {(() => {
                     const workflowTasks = groupedTasks[groupedTask.external_id] || []
-                    const hasErrors = workflowTasks.some(task => task.status === 'failed')
+                    const hasErrors = workflowTasks.some(task => task.status === 'failed' || task.status === 'cancelled')
                     return hasErrors ? <span className="error-indicator" title="Contains failed tasks">⚠️</span> : null
                   })()}
                 </div>
@@ -424,14 +462,14 @@ const TaskViewer: React.FC = () => {
         </div>
 
         {selectedExternalId && groupedTasks[selectedExternalId] && (() => {
-          const failedTasks = groupedTasks[selectedExternalId].filter(task => task.status === 'failed')
+          const failedTasks = groupedTasks[selectedExternalId].filter(task => task.status === 'failed' || task.status === 'cancelled')
           if (failedTasks.length > 0) {
             return (
               <div className="error-alert">
                 <div className="error-alert-icon">⚠️</div>
                 <div className="error-alert-content">
-                  <h3>Workflow contains {failedTasks.length} failed task{failedTasks.length > 1 ? 's' : ''}</h3>
-                  <p>Check the error messages below for details</p>
+                  <h3>Workflow contains {failedTasks.length} failed or cancelled task{failedTasks.length > 1 ? 's' : ''}</h3>
+                  <p>Check the details below for more information</p>
                 </div>
               </div>
             )
@@ -464,9 +502,20 @@ const TaskViewer: React.FC = () => {
                       <h3>Step {stepNumber}: {task.task_id}</h3>
                       <div className="step-running-time">Running time: {stepRunningTime}</div>
                     </div>
-                    <span className={`status ${getStatusColor(task.status)}`}>
-                      {task.status}
-                    </span>
+                    <div className="task-status-section">
+                      <span className={`status ${getStatusColor(task.status)}`}>
+                        {task.status}
+                      </span>
+                      {(task.status === 'pending' || task.status === 'in_progress') && (
+                        <button 
+                          className="cancel-button"
+                          onClick={() => handleCancelTask(task.task_id)}
+                          title="Cancel this task"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 
                 <div className="task-details">

@@ -328,6 +328,31 @@
   border-bottom: 1px solid #eee;
 }
 
+.task-status-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cancel-button {
+  padding: 4px 12px;
+  font-size: 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+.cancel-button:active {
+  transform: scale(0.95);
+}
+
 .task-title {
   display: flex;
   flex-direction: column;
@@ -377,6 +402,11 @@
 .status-pending {
   background-color: #d1ecf1;
   color: #0c5460;
+}
+
+.status-cancelled {
+  background-color: #e9ecef;
+  color: #495057;
 }
 
 .task-details {

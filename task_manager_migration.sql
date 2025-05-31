@@ -1,8 +1,17 @@
+-- ============================================
+-- TASK MANAGER DATABASE MIGRATION
+-- Complete drop and recreate script
+-- ============================================
 
--- Create table
-CREATE TABLE IF NOT EXISTS task_manager (
+-- Drop existing table and policies if they exist
+DROP TABLE IF EXISTS task_manager CASCADE;
+
+-- Create table with all supported statuses
+CREATE TABLE task_manager (
     task_id VARCHAR(50) PRIMARY KEY,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' 
+        CONSTRAINT task_manager_status_check 
+        CHECK (status IN ('pending', 'in_progress', 'completed', 'failed', 'cancelled')),
     external_id VARCHAR(255),
     poll_url TEXT,
     poll_method VARCHAR(10) DEFAULT 'GET',
@@ -18,74 +27,119 @@ CREATE TABLE IF NOT EXISTS task_manager (
     user_id UUID
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_task_status ON task_manager(status);
-CREATE INDEX IF NOT EXISTS idx_created_at ON task_manager(created_at);
+-- ============================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================
 
--- Enable Row-Level Security
+-- Basic indexes
+CREATE INDEX idx_task_status ON task_manager(status);
+CREATE INDEX idx_created_at ON task_manager(created_at);
+CREATE INDEX idx_updated_at ON task_manager(updated_at);
+
+-- Search optimization indexes
+CREATE INDEX idx_external_id ON task_manager(external_id);
+CREATE INDEX idx_task_type ON task_manager(task_type);
+CREATE INDEX idx_error_message ON task_manager(error_message);
+
+-- Composite indexes for common queries
+CREATE INDEX idx_status_updated_at ON task_manager(status, updated_at DESC);
+CREATE INDEX idx_external_id_updated_at ON task_manager(external_id, updated_at DESC);
+
+-- GIN indexes for JSON and full-text search
+CREATE INDEX idx_result_gin ON task_manager USING GIN(result);
+CREATE INDEX idx_error_message_fts ON task_manager 
+    USING GIN(to_tsvector('english', COALESCE(error_message, '')));
+
+-- ============================================
+-- ROW LEVEL SECURITY (RLS)
+-- ============================================
+
+-- Enable RLS
 ALTER TABLE task_manager ENABLE ROW LEVEL SECURITY;
 
--- Remove old policies
-DROP POLICY IF EXISTS "Tasks are viewable by everyone" ON task_manager;
-DROP POLICY IF EXISTS "Authenticated users can create tasks" ON task_manager;
-DROP POLICY IF EXISTS "Only service role can update tasks" ON task_manager;
-DROP POLICY IF EXISTS "Only service role can delete tasks" ON task_manager;
-
--- Select policy: allow everyone (or restrict by user_id if needed)
+-- Select policy: Everyone can read all tasks
 CREATE POLICY "Enable read access for all"
     ON task_manager FOR SELECT
     USING (true);
 
--- Insert policy: allow authenticated and service roles
+-- Insert policy: Service role and authenticated users can create tasks
 CREATE POLICY "Enable insert for service role and authenticated users"
     ON task_manager FOR INSERT
     WITH CHECK (
-        auth.role() IN ('service_role', 'authenticated') OR
-        auth.jwt() IS NOT NULL
+        auth.role() IN ('service_role', 'authenticated') 
+        OR auth.jwt() IS NOT NULL
     );
 
--- Update policy: only service role
-CREATE POLICY "Enable update for service role"
+-- Update policy: Service role can update anything, anyone can cancel tasks
+CREATE POLICY "Enable update for service role and task cancellation"
     ON task_manager FOR UPDATE
     USING (
-        auth.role() = 'service_role' OR
-        auth.jwt()->>'role' = 'service_role'
+        -- Service role can update anything
+        auth.role() = 'service_role' 
+        OR auth.jwt()->>'role' = 'service_role'
+        OR (
+            -- Anyone (including anon) can cancel pending/in_progress tasks
+            status IN ('pending', 'in_progress')
+        )
+    )
+    WITH CHECK (
+        -- Service role can set any status
+        auth.role() = 'service_role' 
+        OR auth.jwt()->>'role' = 'service_role'
+        OR (
+            -- Anyone can only set status to cancelled
+            status = 'cancelled'
+        )
     );
 
--- Delete policy: only service role
+-- Delete policy: Only service role can delete
 CREATE POLICY "Enable delete for service role"
     ON task_manager FOR DELETE
     USING (
-        auth.role() = 'service_role' OR
-        auth.jwt()->>'role' = 'service_role'
+        auth.role() = 'service_role' 
+        OR auth.jwt()->>'role' = 'service_role'
     );
 
 -- ============================================
--- SEARCH OPTIMIZATION INDEXES
--- Added to improve search performance
+-- HELPER FUNCTION FOR UPDATED_AT
 -- ============================================
 
--- Index for external_id - used for grouping and filtering workflows
-CREATE INDEX IF NOT EXISTS idx_external_id ON task_manager(external_id);
+-- Create function to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Index for task_type - enables fast filtering by task type
-CREATE INDEX IF NOT EXISTS idx_task_type ON task_manager(task_type);
+-- Create trigger to call the function
+CREATE TRIGGER update_task_manager_updated_at 
+    BEFORE UPDATE ON task_manager
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
--- Index for updated_at - improves time-based queries and sorting
-CREATE INDEX IF NOT EXISTS idx_updated_at ON task_manager(updated_at);
+-- ============================================
+-- VERIFY INSTALLATION
+-- ============================================
 
--- GIN index for JSONB result field - enables efficient searches within JSON data
-CREATE INDEX IF NOT EXISTS idx_result_gin ON task_manager USING GIN(result);
+-- Check table structure
+SELECT column_name, data_type, column_default, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'task_manager'
+ORDER BY ordinal_position;
 
--- Index for error_message - speeds up error searches
-CREATE INDEX IF NOT EXISTS idx_error_message ON task_manager(error_message);
+-- Check constraints
+SELECT conname, pg_get_constraintdef(oid) 
+FROM pg_constraint 
+WHERE conrelid = 'task_manager'::regclass;
 
--- Composite index for common query patterns - optimizes status + time queries
-CREATE INDEX IF NOT EXISTS idx_status_updated_at ON task_manager(status, updated_at DESC);
+-- Check indexes
+SELECT indexname, indexdef
+FROM pg_indexes
+WHERE tablename = 'task_manager';
 
--- Composite index for external_id + time - optimizes workflow grouping with time sorting
-CREATE INDEX IF NOT EXISTS idx_external_id_updated_at ON task_manager(external_id, updated_at DESC);
-
--- Full-text search index for error messages - enables fast text search in errors
-CREATE INDEX IF NOT EXISTS idx_error_message_fts ON task_manager 
-USING GIN(to_tsvector('english', COALESCE(error_message, '')));
+-- Check RLS policies
+SELECT policyname, permissive, roles, cmd, qual, with_check
+FROM pg_policies
+WHERE tablename = 'task_manager';
