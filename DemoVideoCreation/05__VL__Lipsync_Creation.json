@@ -250,7 +250,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -273,7 +273,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "=https://YOUR_URL/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -317,7 +317,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -359,7 +359,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/ca78f329-830c-4b0d-adf1-8671c47ab6ba",
+        "url": "https://YOUR_URL/webhook/ca78f329-830c-4b0d-adf1-8671c47ab6ba",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -403,7 +403,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -776,36 +776,7 @@
       ]
     }
   },
-  "pinData": {
-    "Webhook": [
-      {
-        "headers": {
-          "host": "dev.mindstreamai.app",
-          "user-agent": "axios/1.8.3",
-          "content-length": "82",
-          "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
-          "accept-encoding": "gzip, br",
-          "cdn-loop": "cloudflare; loops=1",
-          "cf-connecting-ip": "65.109.243.42",
-          "cf-ipcountry": "FI",
-          "cf-ray": "9483e206a84ffe94-AMS",
-          "cf-visitor": "{\"scheme\":\"https\"}",
-          "content-type": "application/json",
-          "x-forwarded-for": "172.71.95.153",
-          "x-forwarded-host": "dev.mindstreamai.app",
-          "x-forwarded-proto": "https"
-        },
-        "params": {},
-        "query": {},
-        "body": {
-          "TaskID": "0618c449-4820-448e-8c61-a9be044bf18c",
-          "external_id": "x5sgwaf4fbekuu8x"
-        },
-        "webhookUrl": "https://dev.mindstreamai.app/webhook/LipsyncCreation",
-        "executionMode": "production"
-      }
-    ]
-  },
+  "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"

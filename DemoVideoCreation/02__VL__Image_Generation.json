@@ -272,7 +272,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -295,7 +295,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "=https://YOUR_URL/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -339,7 +339,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -365,7 +365,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/VideoCreation",
+        "url": "https://YOUR_URL/webhook/VideoCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -393,7 +393,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -798,7 +798,7 @@
     "Webhook": [
       {
         "headers": {
-          "host": "dev.mindstreamai.app",
+          "host": "YOUR_URL",
           "user-agent": "axios/1.8.3",
           "content-length": "82",
           "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
@@ -810,7 +810,7 @@
           "cf-visitor": "{\"scheme\":\"https\"}",
           "content-type": "application/json",
           "x-forwarded-for": "104.23.166.156",
-          "x-forwarded-host": "dev.mindstreamai.app",
+          "x-forwarded-host": "YOUR_URL",
           "x-forwarded-proto": "https"
         },
         "params": {},
@@ -819,7 +819,7 @@
           "TaskID": "71640c06-d7bc-4149-8144-09b1ffa33bed",
           "external_id": "1h8ancwymshmwt5s"
         },
-        "webhookUrl": "https://dev.mindstreamai.app/webhook/ImageCreation",
+        "webhookUrl": "https://YOUR_URL/webhook/ImageCreation",
         "executionMode": "production"
       }
     ]

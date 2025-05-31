@@ -61,7 +61,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\n\"base_url\": \"https://dev.mindstreamai.app\"\n}",
+        "jsonOutput": "{\n\"base_url\": \"https://YOUR_URL\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -298,7 +298,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/VideoCreation",
+        "url": "https://YOUR_URL/webhook/VideoCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -326,7 +326,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,

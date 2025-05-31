@@ -72,7 +72,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/ImageCreation",
+        "url": "https://YOUR_URL/webhook/ImageCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -100,7 +100,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "=https://YOUR_URL/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -312,7 +312,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,

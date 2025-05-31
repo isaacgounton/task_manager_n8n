@@ -78,7 +78,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/LipsyncCreation",
+        "url": "https://YOUR_URL/webhook/LipsyncCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -105,7 +105,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -128,7 +128,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "=https://YOUR_URL/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -172,7 +172,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -230,7 +230,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -345,19 +345,19 @@
             {
               "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
               "name": "Final_Image",
-              "value": "=$('TM_GetStatus').item.json.result['Final_Image']",
+              "value": "={{ $('TM_GetStatus').item.json.result['Final_Image'] }}",
               "type": "string"
             },
             {
               "id": "8b1abe85-980c-4ba5-b5b3-263dd07fc961",
               "name": "Video_RES",
-              "value": "=$('TM_GetStatus').item.json.result.['Video_RES']",
+              "value": "={{ $('TM_GetStatus').item.json.result.Video_RES }}",
               "type": "string"
             },
             {
               "id": "6ff7ba3d-3ed8-4ba3-b454-489f0a06c172",
               "name": "Audio_MP3",
-              "value": "=$json.data.url",
+              "value": "={{ $('File Upload1').item.json.data.url }}",
               "type": "string"
             }
           ]
@@ -517,7 +517,36 @@
       ]
     }
   },
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "host": "YOUR_URL",
+          "user-agent": "axios/1.8.3",
+          "content-length": "82",
+          "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+          "accept-encoding": "gzip, br",
+          "cdn-loop": "cloudflare; loops=1",
+          "cf-connecting-ip": "65.109.243.42",
+          "cf-ipcountry": "FI",
+          "cf-ray": "948425e13b150b56-AMS",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "content-type": "application/json",
+          "x-forwarded-for": "172.71.99.3",
+          "x-forwarded-host": "YOUR_URL",
+          "x-forwarded-proto": "https"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "TaskID": "d62c76be-915c-4ba8-93fc-d49b7810c41d",
+          "external_id": "nsulddo7gbh9p35m"
+        },
+        "webhookUrl": "https://YOUR_URL/webhook/AudioCreation",
+        "executionMode": "production"
+      }
+    ]
+  },
   "meta": {
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
   }

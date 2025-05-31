@@ -254,7 +254,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -277,7 +277,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "=https://YOUR_URL/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -321,7 +321,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -347,7 +347,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/AudioCreation",
+        "url": "https://YOUR_URL/webhook/AudioCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -406,7 +406,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -521,13 +521,13 @@
             {
               "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
               "name": "Final_Image",
-              "value": "=$('TM_GetStatus').item.json.result['Final_Image']",
+              "value": "={{ $('TM_GetStatus').item.json.result['Final_Image'] }}",
               "type": "string"
             },
             {
               "id": "468cfd33-4d6d-4725-9196-a276fa1997f3",
               "name": "Video_RES",
-              "value": "=$json.data.output.video_url",
+              "value": "={{ $('IF (Image Ready)1').item.json.data.output.video_url }}",
               "type": "string"
             }
           ]
