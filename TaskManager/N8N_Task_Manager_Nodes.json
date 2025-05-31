@@ -1,5 +1,4 @@
 {
-  "name": "N8N Task Manager Nodes",
   "nodes": [
     {
       "parameters": {
@@ -62,7 +61,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\n\"base_url\": \"https://YOUR_URL\"\n}",
+        "jsonOutput": "{\n\"base_url\": \"https://dev.mindstreamai.app\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -282,9 +281,214 @@
           "name": "TaskManager DEMO AUTH"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate random 16-character alphanumeric string and assign it to 'external_id'\nfor (const item of $input.all()) {\n\titem.json.external_id = [...Array(16)]\n\t\t.map(() => Math.random().toString(36)[2])\n\t\t.join('');\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        -260
+      ],
+      "id": "ee584522-8620-4052-b2ef-0ec2833bef31",
+      "name": "GenerateUniqueID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://dev.mindstreamai.app/webhook/VideoCreation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $('Webhook').item.json.body.external_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        920,
+        -20
+      ],
+      "id": "9d28b7f5-050e-486b-a481-0f862d5bd911",
+      "name": "TriggerWorkflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"CreateJSON\").item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        -20
+      ],
+      "id": "93992375-9034-4871-9958-215e660e6851",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed merge logic for nodes with different data shapes\n\nconst getInside = $('InsideJSON').item.json || {};\nconst getOutside = $('OutsideJSON').item.json.result || {};\n\nreturn [\n  {\n    json: {\n      status: $('OutsideJSON').item.json.status || 'unknown',\n      result: {\n        ...getInside,\n        ...getOutside\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -200
+      ],
+      "id": "68d2ab7b-bf3d-49af-9c41-67b7e8d82e87",
+      "name": "CreateJSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
+              "name": "task_id",
+              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+              "type": "string"
+            },
+            {
+              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
+              "name": "Image to reference",
+              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
+              "name": "Subject Description",
+              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
+              "type": "string"
+            },
+            {
+              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
+              "name": "Exaggeration Level",
+              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
+              "name": "Visual Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
+              "name": "Lighting Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
+              "name": "Background",
+              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
+              "type": "string"
+            },
+            {
+              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
+              "name": "Sound Text",
+              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
+              "type": "string"
+            },
+            {
+              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
+              "name": "Generate voice",
+              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
+              "name": "Choose model for Video",
+              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
+              "name": "Format",
+              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
+              "type": "string"
+            },
+            {
+              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
+              "name": "Eleven Labs Voice (W/M)",
+              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
+              "type": "string"
+            },
+            {
+              "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
+              "name": "Final_Image",
+              "value": "={{ $('File Upload').item.json.data.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        -200
+      ],
+      "id": "cd434f53-f0fa-418d-9ed4-5a33e3b7d2b2",
+      "name": "InsideJSON"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"completed\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        -340
+      ],
+      "id": "6ddfcdd8-cf2f-421c-a584-fd07939bd4f4",
+      "name": "OutsideJSON"
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 480,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -420
+      ],
+      "id": "f98ebd25-ec42-4839-85b9-2087200129d7",
+      "name": "Sticky Note4"
     }
   ],
-  "pinData": {},
   "connections": {
     "START": {
       "main": [
@@ -367,16 +571,54 @@
           }
         ]
       ]
+    },
+    "TM_SetStatus_COMPLETE": {
+      "main": [
+        [
+          {
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreateJSON": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsideJSON": {
+      "main": [
+        [
+          {
+            "node": "CreateJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OutsideJSON": {
+      "main": [
+        [
+          {
+            "node": "InsideJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "387bdd3a-519c-4ab8-8148-9b762ef72108",
+  "pinData": {},
   "meta": {
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
-  },
-  "id": "O2dmPge6WG7xYrFQ",
-  "tags": []
+  }
 }

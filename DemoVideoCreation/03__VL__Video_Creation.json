@@ -1,5 +1,4 @@
 {
-  "name": "03. VL: Video Creation",
   "nodes": [
     {
       "parameters": {
@@ -45,7 +44,7 @@
       "typeVersion": 1,
       "position": [
         -460,
-        -260
+        -300
       ],
       "id": "50331fa2-0db7-47a8-85d0-fa395ddda80e",
       "name": "PiAPI Task Status",
@@ -88,7 +87,7 @@
       "typeVersion": 1.1,
       "position": [
         -280,
-        -260
+        -300
       ],
       "id": "9b180e35-ce2f-4430-a5db-f1f1f4485c05",
       "name": "Wait",
@@ -232,7 +231,7 @@
       "typeVersion": 2.2,
       "position": [
         -120,
-        -260
+        -300
       ],
       "id": "eed68d28-3796-4082-b321-f2408cc3c918",
       "name": "If if failed drop error"
@@ -255,7 +254,7 @@
     },
     {
       "parameters": {
-        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -278,7 +277,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/create-task",
+        "url": "=https://dev.mindstreamai.app/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -322,7 +321,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -348,7 +347,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_URL/webhook/AudioCreation",
+        "url": "https://dev.mindstreamai.app/webhook/AudioCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -367,8 +366,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        140,
-        -40
+        380,
+        0
       ],
       "id": "ae773249-01f3-4910-9b2e-fce94834ed44",
       "name": "TriggerWorkflow"
@@ -391,48 +390,6 @@
     },
     {
       "parameters": {
-        "content": "## Task  Manager Nods",
-        "height": 560,
-        "width": 280,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        80,
-        -400
-      ],
-      "id": "6e79be9f-94d4-448c-899b-0d6dddedca9c",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $('TM_GetStatus').item.json.result['Final_Image'] }}\",\n          \"Video_RES\":\"{{ $json.data.output.video_url }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        120,
-        -280
-      ],
-      "id": "31c25dbc-55e7-4da0-8ded-aff7ae309584",
-      "name": "TM_SetStatus_COMPLETE",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "ls9itmRH8ZrWv4rJ",
-          "name": "TaskManager DEMO AUTH"
-        }
-      }
-    },
-    {
-      "parameters": {
         "content": "### Kling Image-to-Video Animation (with AI Motion Prompt)\n\nThis flow converts a **final image** into a stylized **video** using PiAPI (Kling), with animated motion prompts generated by OpenAI.\n---\n\n#### 🧠 **AI Motion Prompt**\n- **OpenAI Node:**\n  - Analyzes the `Final_Image` using `chatgpt-4o-latest`\n  - Generates a motion-aware video prompt\n  - Adds dynamic **camera movement** and **scene action** naturally\n---\n\n#### 🧠 **Model Routing**\n- **Switch Node:**\n  - Branches based on `\"Choose model for Video\"` field from `TM_GetStatus`\n  - Currently routes to **Kling**, with support for future models like `Veo2`\n---\n\n#### 🎞️ **Video Generation**\n- **Kling Image to Video Node:**\n  - Uses prompt and image to generate video (aspect ratio `9:16`)\n  - Starts the async task and returns `task_id`\n---\n\n#### ⏳ **Status Polling**\n- **PiAPI Task Status + Wait + Retry:**\n  - Checks task status in a loop\n  - If still not `completed`, it waits 60 seconds and retries (max 5 tries)\n\n- **IF (Image Ready):**\n  - If status is `completed` → proceed\n  - Else → re-check status after wait\n\n- **If if failed drop error:**\n  - If status is not `\"failed\"` → continue retry loop\n  - If status is `\"failed\"` → route to **Stop and Error**\n---\n\n#### ❌ **Error Handling**\n- **Stop and Error:**\n  - Terminates the flow if video generation failed\n  - Displays `Failed to generate` error to execution log\n---\n\n📌 **Flow Purpose Summary:**\n- Enables animated video output from static caricature images\n- Adds realistic motion prompts for cinematic video output\n- Ensures task completion before continuing\n",
         "height": 1120,
         "width": 980
@@ -445,9 +402,179 @@
       ],
       "id": "333312da-9362-4eb3-92c4-62b65a1486cd",
       "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"CreateJSON\").item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        200,
+        0
+      ],
+      "id": "bef54114-75de-454c-9305-6be0a08f307a",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed merge logic for nodes with different data shapes\n\nconst getInside = $('InsideJSON').item.json || {};\nconst getOutside = $('OutsideJSON').item.json.result || {};\n\nreturn [\n  {\n    json: {\n      status: $('OutsideJSON').item.json.status || 'unknown',\n      result: {\n        ...getInside,\n        ...getOutside\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        380,
+        -180
+      ],
+      "id": "6ed1bb3f-edb4-43ba-9737-582af4b4957a",
+      "name": "CreateJSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
+              "name": "task_id",
+              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+              "type": "string"
+            },
+            {
+              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
+              "name": "Image to reference",
+              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
+              "name": "Subject Description",
+              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
+              "type": "string"
+            },
+            {
+              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
+              "name": "Exaggeration Level",
+              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
+              "name": "Visual Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
+              "name": "Lighting Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
+              "name": "Background",
+              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
+              "type": "string"
+            },
+            {
+              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
+              "name": "Sound Text",
+              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
+              "type": "string"
+            },
+            {
+              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
+              "name": "Generate voice",
+              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
+              "name": "Choose model for Video",
+              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
+              "name": "Format",
+              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
+              "type": "string"
+            },
+            {
+              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
+              "name": "Eleven Labs Voice (W/M)",
+              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
+              "type": "string"
+            },
+            {
+              "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
+              "name": "Final_Image",
+              "value": "=$('TM_GetStatus').item.json.result['Final_Image']",
+              "type": "string"
+            },
+            {
+              "id": "468cfd33-4d6d-4725-9196-a276fa1997f3",
+              "name": "Video_RES",
+              "value": "=$json.data.output.video_url",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        -180
+      ],
+      "id": "8345d25e-9de2-47b0-a837-4d9af13912cf",
+      "name": "InsideJSON"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"completed\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        180,
+        -320
+      ],
+      "id": "6a248ba0-37b6-40d1-9e17-c0562f5fd2a3",
+      "name": "OutsideJSON"
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 480,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        100,
+        -400
+      ],
+      "id": "58499001-a5ae-406f-b357-0dbc686fe0c0",
+      "name": "Sticky Note4"
     }
   ],
-  "pinData": {},
   "connections": {
     "Kling Image to Video": {
       "main": [
@@ -475,7 +602,7 @@
       "main": [
         [
           {
-            "node": "TM_SetStatus_COMPLETE",
+            "node": "OutsideJSON",
             "type": "main",
             "index": 0
           }
@@ -594,16 +721,43 @@
           }
         ]
       ]
+    },
+    "CreateJSON": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsideJSON": {
+      "main": [
+        [
+          {
+            "node": "CreateJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OutsideJSON": {
+      "main": [
+        [
+          {
+            "node": "InsideJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "09a18f40-98bd-498d-8799-8a1f70985a83",
+  "pinData": {},
   "meta": {
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
-  },
-  "id": "TUSNFzOZD5wOjYxY",
-  "tags": []
+  }
 }

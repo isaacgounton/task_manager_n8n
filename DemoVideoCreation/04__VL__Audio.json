@@ -1,16 +1,15 @@
 {
-  "name": "04. VL: Audio",
   "nodes": [
     {
       "parameters": {
         "text": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
         "voice_id": {
           "__rl": true,
-          "value": "={{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}",
+          "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
           "mode": "id"
         },
         "additionalFields": {
-          "file_name": "={{ $('TM_GetStatus').item.json.result.TaskID }}.mp3"
+          "file_name": "={{ $('TM_GetStatus').item.json.result.task_id }}.mp3"
         },
         "requestOptions": {}
       },
@@ -79,7 +78,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_URL/webhook/LipsyncCreation",
+        "url": "https://dev.mindstreamai.app/webhook/LipsyncCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -98,57 +97,15 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        820,
-        180
+        1040,
+        220
       ],
       "id": "92d7131f-43d6-4e88-ba06-c1ce78f3d55d",
       "name": "TriggerWorkflow"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",          \n          \"Final_Image\": \"{{ $('TM_GetStatus').item.json.result['Final_Image'] }}\",\n          \"Video_RES\":\"{{ $('TM_GetStatus').item.json.result.Video_RES }}\",\n          \"Audio_MP3\":\"{{ $json.data.url }}\",\n          \"Upload Image\": \"{{ $('TM_GetStatus').item.json.result['Upload Image'] }}\",\n          \"Subject Description\": \"{{ $('TM_GetStatus').item.json.result['Subject Description'] }}\",\n          \"Exaggeration Level\": \"{{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('TM_GetStatus').item.json.result.Background }}\",\n          \"Lighting Style\": \"{{ $('TM_GetStatus').item.json.result['Lighting Style'] }}\",\n          \"Visual Style\": \"{{ $('TM_GetStatus').item.json.result['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('TM_GetStatus').item.json.result['Sound Text'] }}\",\n          \"Generate voice\": \"{{ $('TM_GetStatus').item.json.result['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('TM_GetStatus').item.json.result.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('TM_GetStatus').item.json.result.ElevenLabsVoiceID }}\"}\n} ",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        800,
-        -60
-      ],
-      "id": "19327005-3411-428a-9dcd-2507559bb8ca",
-      "name": "TM_SetStatus_COMPLETE",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "ls9itmRH8ZrWv4rJ",
-          "name": "TaskManager DEMO AUTH"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "content": "## Task  Manager Nods",
-        "height": 560,
-        "width": 280,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        760,
-        -180
-      ],
-      "id": "2b78d920-b2e3-45ff-a1e8-0253daa21443",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -171,7 +128,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/create-task",
+        "url": "=https://dev.mindstreamai.app/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -215,7 +172,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -269,9 +226,185 @@
       "id": "d67df484-6845-4e23-8f6e-e2a7cfd356a8",
       "name": "Webhook",
       "webhookId": "30ceee44-edc6-4a8c-93d9-1440446cbb3d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $(\"CreateJSON\").item.json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        220
+      ],
+      "id": "2d2e6300-3ad8-481e-bd3c-33b9f6da5935",
+      "name": "TM_SetStatus_COMPLETE",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed merge logic for nodes with different data shapes\n\nconst getInside = $('InsideJSON').item.json || {};\nconst getOutside = $('OutsideJSON').item.json.result || {};\n\nreturn [\n  {\n    json: {\n      status: $('OutsideJSON').item.json.status || 'unknown',\n      result: {\n        ...getInside,\n        ...getOutside\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        40
+      ],
+      "id": "bad2a655-a142-4915-9990-ad48b3166298",
+      "name": "CreateJSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
+              "name": "task_id",
+              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+              "type": "string"
+            },
+            {
+              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
+              "name": "Image to reference",
+              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
+              "name": "Subject Description",
+              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
+              "type": "string"
+            },
+            {
+              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
+              "name": "Exaggeration Level",
+              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
+              "name": "Visual Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
+              "name": "Lighting Style",
+              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
+              "name": "Background",
+              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
+              "type": "string"
+            },
+            {
+              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
+              "name": "Sound Text",
+              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
+              "type": "string"
+            },
+            {
+              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
+              "name": "Generate voice",
+              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
+              "name": "Choose model for Video",
+              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
+              "name": "Format",
+              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
+              "type": "string"
+            },
+            {
+              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
+              "name": "Eleven Labs Voice (W/M)",
+              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
+              "type": "string"
+            },
+            {
+              "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
+              "name": "Final_Image",
+              "value": "=$('TM_GetStatus').item.json.result['Final_Image']",
+              "type": "string"
+            },
+            {
+              "id": "8b1abe85-980c-4ba5-b5b3-263dd07fc961",
+              "name": "Video_RES",
+              "value": "=$('TM_GetStatus').item.json.result.['Video_RES']",
+              "type": "string"
+            },
+            {
+              "id": "6ff7ba3d-3ed8-4ba3-b454-489f0a06c172",
+              "name": "Audio_MP3",
+              "value": "=$json.data.url",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        40
+      ],
+      "id": "4c29ec0d-7b73-4fce-b1b1-248cf6354073",
+      "name": "InsideJSON"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"completed\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        -100
+      ],
+      "id": "ba83b88d-3a3b-4473-966f-f1da7782bf2d",
+      "name": "OutsideJSON"
+    },
+    {
+      "parameters": {
+        "content": "## Task  Manager Nods",
+        "height": 560,
+        "width": 480,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -180
+      ],
+      "id": "6ee998a2-430a-4a04-8a65-d6f42c36ea2d",
+      "name": "Sticky Note3"
     }
   ],
-  "pinData": {},
   "connections": {
     "ElevenLabs": {
       "main": [
@@ -288,18 +421,7 @@
       "main": [
         [
           {
-            "node": "TM_SetStatus_COMPLETE",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "TM_SetStatus_COMPLETE": {
-      "main": [
-        [
-          {
-            "node": "TriggerWorkflow",
+            "node": "OutsideJSON",
             "type": "main",
             "index": 0
           }
@@ -328,6 +450,17 @@
         ]
       ]
     },
+    "TM_SetStatus_Start": {
+      "main": [
+        [
+          {
+            "node": "ElevenLabs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Webhook": {
       "main": [
         [
@@ -339,11 +472,44 @@
         ]
       ]
     },
-    "TM_SetStatus_Start": {
+    "TM_SetStatus_COMPLETE": {
       "main": [
         [
           {
-            "node": "ElevenLabs",
+            "node": "TriggerWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreateJSON": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsideJSON": {
+      "main": [
+        [
+          {
+            "node": "CreateJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OutsideJSON": {
+      "main": [
+        [
+          {
+            "node": "InsideJSON",
             "type": "main",
             "index": 0
           }
@@ -351,14 +517,8 @@
       ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "versionId": "48236731-afb4-4a5d-a8d9-4a4254a12273",
+  "pinData": {},
   "meta": {
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
-  },
-  "id": "Wz9lPeoG2UwT6DhH",
-  "tags": []
+  }
 }

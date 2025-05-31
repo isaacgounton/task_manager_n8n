@@ -1,5 +1,4 @@
 {
-  "name": "01. VL: Form submission",
   "nodes": [
     {
       "parameters": {
@@ -73,7 +72,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_URL/webhook/ImageCreation",
+        "url": "https://dev.mindstreamai.app/webhook/ImageCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -92,8 +91,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        800,
-        300
+        1000,
+        340
       ],
       "id": "e0d31763-a05c-4642-b30c-25b99a5fe652",
       "name": "TriggerWorkflow"
@@ -101,7 +100,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/create-task",
+        "url": "=https://dev.mindstreamai.app/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -313,19 +312,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n    \"status\": \"completed\",\n    \"result\": {\n          \"TaskID\": \"{{ $('TM_SIMPLE_NODE').item.json.task_id }}\",\n          \"Upload Image\": \"{{ $('FORM').item.json['Image to reference'] }}\",\n          \"Subject Description\": \"{{ $('Image_Prompt_Agent').item.json.output['Subject description'] }}\",\n          \"Exaggeration Level\": \"{{ $('FORM').item.json['Exaggeration Level'] }}\",\n          \"Background\": \"{{ $('Image_Prompt_Agent').item.json.output.Background }}\",\n          \"Lighting Style\": \"{{ $('Image_Prompt_Agent').item.json.output['Lighting style'] }}\",\n          \"Visual Style\": \"{{ $('FORM').item.json['Visual Style'] }}\",\n          \"Sound Text\":  \"{{ $('Image_Prompt_Agent').item.json.output['Sound text'] }}\",\n          \"Generate voice\": \"{{ $('FORM').item.json['Generate voice'] }}\",\n          \"Choose model for Video\":  \"{{ $('FORM').item.json['Choose model for Video'] }}\",\n          \"Format\": \"{{ $('FORM').item.json.Format }}\",\n          \"ElevenLabsVoiceID\": \"{{ $('FORM').item.json['Eleven Labs Voice (W/M)'] }}\"}\n} ",
+        "jsonBody": "={{ $(\"CreateJSON\").item.json }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
         800,
-        80
+        340
       ],
       "id": "86acc784-48a2-4de2-9c0f-55e83f2eba23",
       "name": "TM_SetStatus_COMPLETE",
@@ -372,7 +371,7 @@
       "parameters": {
         "content": "## Task  Manager Nods",
         "height": 460,
-        "width": 280,
+        "width": 480,
         "color": 3
       },
       "type": "n8n-nodes-base.stickyNote",
@@ -461,12 +460,12 @@
       "parameters": {
         "content": "### TM_SetStatus_COMPLETE\nMarks the task as `\"completed\"` and sends a `POST` request to Task Manager with result metadata.\n\n**URL Format:**  \n`/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}`\n\n**Authentication:** `httpHeaderAuth`\n\n**Body Content:** JSON object with:\n- `\"status\": \"completed\"`\n- `\"result\"` object with task details from various sources (e.g., FORM, TM_GetStatus, JSON)\n\n🟢 **Custom Result Properties:**\nEach workflow adds different fields based on its output:\n- `Final_Image`, `Video_RES`, `Video_Lipsync`, `Audio_MP3` (varies by task type)\n- Fields pulled from:\n  - `TM_GetStatus` node (most workflows)\n  - `FORM` or `Image_Prompt_Agent` nodes (Pixar/Image form-based workflows)\n\n🛠️ **Key Differences Across Workflows:**\n| Workflow Type | Dynamic Fields in `result`                                  |\n|---------------|--------------------------------------------------------------|\n| Image         | Uses FORM + Agent node data (Background, Style, etc.)       |\n| Video         | Adds `Final_Image` and uses results from `TM_GetStatus`     |\n| Audio         | Adds `Final_Image`, `Video_RES`, `Audio_MP3`                |\n| Lipsync       | Adds `Final_Image`, `Video_RES`, `Video_Lipsync`, `Audio_MP3`|\n\n📌 Ensure that source nodes (`$('X').item.json.result.Y`) exist and return expected structure.\n",
         "height": 600,
-        "width": 840
+        "width": 820
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1020,
+        1220,
         0
       ],
       "id": "edb1de36-753c-47d6-9d99-106af27b2250",
@@ -486,27 +485,125 @@
       ],
       "id": "11ea358e-2062-402b-83dc-488d6564db08",
       "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"status\": \"completed\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        60
+      ],
+      "id": "7ea7b7a7-1970-4d8b-af9e-5bde8a7620f2",
+      "name": "OutsideJSON"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fixed merge logic for nodes with different data shapes\n\nconst getInside = $('InsideJSON').item.json || {};\nconst getOutside = $('OutsideJSON').item.json.result || {};\n\nreturn [\n  {\n    json: {\n      status: $('OutsideJSON').item.json.status || 'unknown',\n      result: {\n        ...getInside,\n        ...getOutside\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        200
+      ],
+      "id": "3453742b-5a88-40cc-8892-6388a27aab8e",
+      "name": "CreateJSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
+              "name": "task_id",
+              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+              "type": "string"
+            },
+            {
+              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
+              "name": "Image to reference",
+              "value": "={{ $('FORM').item.json['Image to reference'] }}",
+              "type": "string"
+            },
+            {
+              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
+              "name": "Subject Description",
+              "value": "={{ $('Image_Prompt_Agent').item.json.output['Subject description'] }}",
+              "type": "string"
+            },
+            {
+              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
+              "name": "Exaggeration Level",
+              "value": "={{ $('FORM').item.json['Exaggeration Level'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
+              "name": "Visual Style",
+              "value": "={{ $('FORM').item.json['Visual Style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
+              "name": "Lighting Style",
+              "value": "={{ $('Image_Prompt_Agent').item.json.output['Lighting style'] }}",
+              "type": "string"
+            },
+            {
+              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
+              "name": "Background",
+              "value": "={{ $('Image_Prompt_Agent').item.json.output.Background }}",
+              "type": "string"
+            },
+            {
+              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
+              "name": "Sound Text",
+              "value": "={{ $('Image_Prompt_Agent').item.json.output['Sound text'] }}",
+              "type": "string"
+            },
+            {
+              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
+              "name": "Generate voice",
+              "value": "={{ $('FORM').item.json['Generate voice'] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
+              "name": "Choose model for Video",
+              "value": "={{ $('FORM').item.json['Choose model for Video'] }}",
+              "type": "string"
+            },
+            {
+              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
+              "name": "Format",
+              "value": "={{ $('FORM').item.json.Format }}",
+              "type": "string"
+            },
+            {
+              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
+              "name": "Eleven Labs Voice (W/M)",
+              "value": "={{ $('FORM').item.json['Eleven Labs Voice (W/M)'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        200
+      ],
+      "id": "53539877-340e-4c2f-a610-1031e831db70",
+      "name": "InsideJSON"
     }
   ],
-  "pinData": {
-    "FORM": [
-      {
-        "json": {
-          "Image to reference": "",
-          "Subject Description": "young woman with rosy cheeks and sweet blue eyes with rocker jacket riding a motorcycle",
-          "Exaggeration Level": "Low (subtle)",
-          "Visual Style": "Pixar-style",
-          "Lighting Style": "dramatic",
-          "Background": "biker bar with neon signs and motorcycles",
-          "Sound Text": "Hey! Should I ride this bike? Should I steal it? What do you suggest?",
-          "Generate voice": "Yes",
-          "Choose model for Video": "Kling",
-          "Format": "9:16",
-          "Eleven Labs Voice (W/M)": "z7U1SjrEq4fDDDriOQEN"
-        }
-      }
-    ]
-  },
   "connections": {
     "OpenAI Chat Model": {
       "ai_languageModel": [
@@ -556,7 +653,7 @@
       "main": [
         [
           {
-            "node": "TM_SetStatus_COMPLETE",
+            "node": "OutsideJSON",
             "type": "main",
             "index": 0
           }
@@ -584,18 +681,60 @@
           }
         ]
       ]
+    },
+    "OutsideJSON": {
+      "main": [
+        [
+          {
+            "node": "InsideJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreateJSON": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_COMPLETE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsideJSON": {
+      "main": [
+        [
+          {
+            "node": "CreateJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "errorWorkflow": "kByCQTr1nYAUTU2a"
+  "pinData": {
+    "FORM": [
+      {
+        "Image to reference": "",
+        "Subject Description": "young woman with rosy cheeks and sweet blue eyes with rocker jacket riding a motorcycle",
+        "Exaggeration Level": "Low (subtle)",
+        "Visual Style": "Pixar-style",
+        "Lighting Style": "dramatic",
+        "Background": "biker bar with neon signs and motorcycles",
+        "Sound Text": "Hey! Should I ride this bike? Should I steal it? What do you suggest?",
+        "Generate voice": "Yes",
+        "Choose model for Video": "Kling",
+        "Format": "9:16",
+        "Eleven Labs Voice (W/M)": "z7U1SjrEq4fDDDriOQEN"
+      }
+    ]
   },
-  "versionId": "a349fbb2-7ed9-410e-913f-0ecfcc2460ba",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
-  },
-  "id": "E2sSNYY8QDYjC57h",
-  "tags": []
+  }
 }
