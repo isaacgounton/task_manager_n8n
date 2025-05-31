@@ -1,7 +1,3 @@
 .aider*
-info.md
-*.pdf
 CLAUDE.md
-todo.md
-IMPLEMENTATION_STATUS.md
-TaskManager/CANCEL_ENDPOINT_SPEC.md
+docs/

@@ -29,7 +29,7 @@ A powerful, low-code orchestration system built with n8n workflows for managing 
 Once your Supabase project is ready:
 1. Go to the SQL Editor in your Supabase dashboard (left sidebar)
 2. Click "New query"
-3. Copy and paste the contents of `task_manager_migration.sql`
+3. Copy and paste the contents of `sql/000_initial_task_manager_migration.sql`
 4. Click "Run" to create the table and security policies
 
 ![Supabase SQL Editor](images/supabase-sql-editor.png)
