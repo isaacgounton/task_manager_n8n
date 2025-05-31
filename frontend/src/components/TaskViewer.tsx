@@ -19,6 +19,10 @@ const TaskViewer: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: '',
+    end: ''
+  })
   const observer = useRef<IntersectionObserver | null>(null)
   const loadMoreTasks = useCallback(() => {
     if (loadingMore || !hasMore) return
@@ -106,35 +110,54 @@ const TaskViewer: React.FC = () => {
     }
   }
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term)
-    
-    if (!term.trim()) {
-      setFilteredTasks(tasks)
-      return
+
+  const applyFilters = () => {
+    let filtered = [...tasks]
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase()
+      filtered = filtered.filter(task => {
+        if (task.task_type?.toLowerCase().includes(searchLower)) return true
+        if (task.status.toLowerCase().includes(searchLower)) return true
+        if (task.error_message?.toLowerCase().includes(searchLower)) return true
+        if (task.result && JSON.stringify(task.result).toLowerCase().includes(searchLower)) return true
+        if (task.external_id?.toLowerCase().includes(searchLower)) return true
+        return false
+      })
     }
 
-    const searchLower = term.toLowerCase()
-    const filtered = tasks.filter(task => {
-      // Search in task_type
-      if (task.task_type?.toLowerCase().includes(searchLower)) return true
-      
-      // Search in status
-      if (task.status.toLowerCase().includes(searchLower)) return true
-      
-      // Search in error_message
-      if (task.error_message?.toLowerCase().includes(searchLower)) return true
-      
-      // Search in result (JSON stringified)
-      if (task.result && JSON.stringify(task.result).toLowerCase().includes(searchLower)) return true
-      
-      // Search in external_id
-      if (task.external_id?.toLowerCase().includes(searchLower)) return true
-      
-      return false
-    })
-    
+    // Apply date range filter
+    if (dateRange.start || dateRange.end) {
+      filtered = filtered.filter(task => {
+        const taskDate = new Date(task.updated_at || task.created_at)
+        
+        if (dateRange.start && dateRange.end) {
+          const startDate = new Date(dateRange.start)
+          const endDate = new Date(dateRange.end)
+          endDate.setHours(23, 59, 59, 999) // Include entire end day
+          return taskDate >= startDate && taskDate <= endDate
+        } else if (dateRange.start) {
+          const startDate = new Date(dateRange.start)
+          return taskDate >= startDate
+        } else if (dateRange.end) {
+          const endDate = new Date(dateRange.end)
+          endDate.setHours(23, 59, 59, 999)
+          return taskDate <= endDate
+        }
+        return true
+      })
+    }
+
     setFilteredTasks(filtered)
+  }
+
+  const handleDateRangeChange = (field: 'start' | 'end', value: string) => {
+    setDateRange(prev => ({ ...prev, [field]: value }))
+  }
+
+  const clearDateRange = () => {
+    setDateRange({ start: '', end: '' })
   }
 
   const formatDate = (dateString: string) => {
@@ -330,8 +353,8 @@ const TaskViewer: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    handleSearch(searchTerm)
-  }, [tasks])
+    applyFilters()
+  }, [tasks, searchTerm, dateRange])
 
   useEffect(() => {
     const allGroupedTasks = getGroupedTasksList()
@@ -405,12 +428,12 @@ const TaskViewer: React.FC = () => {
             className="search-input"
             placeholder="Search workflows..."
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
             <button 
               className="clear-search"
-              onClick={() => handleSearch('')}
+              onClick={() => setSearchTerm('')}
               aria-label="Clear search"
             >
               ×
@@ -418,17 +441,75 @@ const TaskViewer: React.FC = () => {
           )}
         </div>
         
+        <div className="date-filter-container">
+          <h3 className="filter-title">Filter by Date</h3>
+          <div className="date-inputs">
+            <div className="date-input-group">
+              <label htmlFor="start-date">From:</label>
+              <input
+                id="start-date"
+                type="date"
+                className="date-input"
+                value={dateRange.start}
+                onChange={(e) => handleDateRangeChange('start', e.target.value)}
+                max={dateRange.end || undefined}
+              />
+            </div>
+            <div className="date-input-group">
+              <label htmlFor="end-date">To:</label>
+              <input
+                id="end-date"
+                type="date"
+                className="date-input"
+                value={dateRange.end}
+                onChange={(e) => handleDateRangeChange('end', e.target.value)}
+                min={dateRange.start || undefined}
+              />
+            </div>
+          </div>
+          {(dateRange.start || dateRange.end) && (
+            <button
+              className="clear-dates-button"
+              onClick={clearDateRange}
+            >
+              Clear Dates
+            </button>
+          )}
+        </div>
+        
         <div className="tasks-list">
-          {searchTerm && displayedTasks.length > 0 && (
+          {(searchTerm || dateRange.start || dateRange.end) && displayedTasks.length > 0 && (
             <div className="search-results-count">
               Found {filteredTasks.length} workflow{filteredTasks.length !== 1 ? 's' : ''}
+              {dateRange.start || dateRange.end ? (
+                <span className="date-range-info">
+                  {dateRange.start && dateRange.end ? (
+                    ` from ${new Date(dateRange.start).toLocaleDateString()} to ${new Date(dateRange.end).toLocaleDateString()}`
+                  ) : dateRange.start ? (
+                    ` from ${new Date(dateRange.start).toLocaleDateString()}`
+                  ) : (
+                    ` until ${new Date(dateRange.end).toLocaleDateString()}`
+                  )}
+                </span>
+              ) : null}
             </div>
           )}
           
-          {displayedTasks.length === 0 && searchTerm && (
+          {displayedTasks.length === 0 && (searchTerm || dateRange.start || dateRange.end) && (
             <div className="no-results">
-              <p>No workflows found matching "{searchTerm}"</p>
-              <p className="search-hint">Try searching for task type, status, or error messages</p>
+              <p>No workflows found{searchTerm ? ` matching "${searchTerm}"` : ''}</p>
+              {(dateRange.start || dateRange.end) && (
+                <p className="date-range-info">
+                  {dateRange.start && dateRange.end ? (
+                    `Between ${new Date(dateRange.start).toLocaleDateString()} and ${new Date(dateRange.end).toLocaleDateString()}`
+                  ) : dateRange.start ? (
+                    `From ${new Date(dateRange.start).toLocaleDateString()}`
+                  ) : (
+                    `Until ${new Date(dateRange.end).toLocaleDateString()}`
+                  )}
+                </p>
+              )}
+              <p className="search-hint">Try adjusting your search criteria</p>
             </div>
           )}
           

@@ -80,6 +80,77 @@
   color: #ccc;
 }
 
+.date-filter-container {
+  padding: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.filter-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #888;
+  margin: 0 0 15px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.date-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-input-group label {
+  font-size: 12px;
+  color: #aaa;
+  font-weight: 500;
+}
+
+.date-input {
+  padding: 8px 12px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.date-input:focus {
+  border-color: #3498db;
+  background-color: #333;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+  cursor: pointer;
+}
+
+.clear-dates-button {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background-color: #444;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.clear-dates-button:hover {
+  background-color: #555;
+}
+
 .tasks-list {
   flex: 1;
   overflow-y: auto;
@@ -193,6 +264,11 @@
   background-color: rgba(52, 152, 219, 0.1);
   margin: 0 -20px 15px;
   border-bottom: 1px solid #333;
+}
+
+.date-range-info {
+  color: #6bb6ff;
+  font-weight: 500;
 }
 
 /* Custom scrollbar for sidebar */
