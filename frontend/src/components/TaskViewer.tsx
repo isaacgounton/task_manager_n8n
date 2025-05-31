@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase, Task } from '../lib/supabase'
 import './TaskViewer.css'
+
+interface GroupedTask {
+  external_id: string
+  latest_task: Task
+  task_count: number
+}
 
 const TaskViewer: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -8,6 +14,38 @@ const TaskViewer: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [selectedExternalId, setSelectedExternalId] = useState<string | null>(null)
+  const [displayedTasks, setDisplayedTasks] = useState<GroupedTask[]>([])
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const observer = useRef<IntersectionObserver | null>(null)
+  const loadMoreTasks = useCallback(() => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    
+    setTimeout(() => {
+      const currentLength = displayedTasks.length
+      const allGroupedTasks = getGroupedTasksList()
+      const nextBatch = allGroupedTasks.slice(currentLength, currentLength + 10)
+      
+      if (nextBatch.length === 0) {
+        setHasMore(false)
+      } else {
+        setDisplayedTasks(prev => [...prev, ...nextBatch])
+      }
+      setLoadingMore(false)
+    }, 300)
+  }, [loadingMore, hasMore, displayedTasks, tasks])
+
+  const lastTaskElementRef = useCallback((node: HTMLLIElement | null) => {
+    if (loadingMore) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreTasks()
+      }
+    })
+    if (node) observer.current.observe(node)
+  }, [loadingMore, hasMore, loadMoreTasks])
 
   const fetchTasks = async () => {
     try {
@@ -59,6 +97,55 @@ const TaskViewer: React.FC = () => {
     })
     return grouped
   }
+
+  const categorizeTasksByTime = (tasks: GroupedTask[]) => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const sevenDaysAgo = new Date(today)
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    const categorized = {
+      today: [] as GroupedTask[],
+      yesterday: [] as GroupedTask[],
+      last7Days: [] as GroupedTask[],
+      older: [] as GroupedTask[]
+    }
+
+    tasks.forEach(task => {
+      const taskDate = new Date(task.latest_task.updated_at || task.latest_task.created_at)
+      if (taskDate >= today) {
+        categorized.today.push(task)
+      } else if (taskDate >= yesterday) {
+        categorized.yesterday.push(task)
+      } else if (taskDate >= sevenDaysAgo) {
+        categorized.last7Days.push(task)
+      } else {
+        categorized.older.push(task)
+      }
+    })
+
+    return categorized
+  }
+
+
+  const getGroupedTasksList = useCallback((): GroupedTask[] => {
+    const grouped = groupTasksByExternalId()
+    return Object.entries(grouped).map(([external_id, taskList]) => {
+      const latest = taskList.reduce((latest, task) => 
+        new Date(task.updated_at || task.created_at) > new Date(latest.updated_at || latest.created_at) ? task : latest
+      )
+      return {
+        external_id,
+        latest_task: latest,
+        task_count: taskList.length
+      }
+    }).sort((a, b) => 
+      new Date(b.latest_task.updated_at || b.latest_task.created_at).getTime() - 
+      new Date(a.latest_task.updated_at || a.latest_task.created_at).getTime()
+    )
+  }, [tasks])
 
   const extractTextFromJSON = (data: any): string => {
     if (!data) return ''
@@ -170,23 +257,22 @@ const TaskViewer: React.FC = () => {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    const allGroupedTasks = getGroupedTasksList()
+    const initialBatch = allGroupedTasks.slice(0, 20)
+    setDisplayedTasks(initialBatch)
+    setHasMore(allGroupedTasks.length > 20)
+  }, [tasks])
+
   const groupedTasks = groupTasksByExternalId()
-  const externalIds = Object.keys(groupedTasks).sort((a, b) => {
-    const aLatestTask = groupedTasks[a].reduce((latest, task) => 
-      new Date(task.created_at) > new Date(latest.created_at) ? task : latest
-    )
-    const bLatestTask = groupedTasks[b].reduce((latest, task) => 
-      new Date(task.created_at) > new Date(latest.created_at) ? task : latest
-    )
-    return new Date(bLatestTask.created_at).getTime() - new Date(aLatestTask.created_at).getTime()
-  })
+  const categorizedTasks = categorizeTasksByTime(displayedTasks)
 
   // Auto-select first external ID if none selected
   useEffect(() => {
-    if (!selectedExternalId && externalIds.length > 0) {
-      setSelectedExternalId(externalIds[0])
+    if (!selectedExternalId && displayedTasks.length > 0) {
+      setSelectedExternalId(displayedTasks[0].external_id)
     }
-  }, [externalIds, selectedExternalId])
+  }, [displayedTasks, selectedExternalId])
 
   if (loading && tasks.length === 0) {
     return <div className="loading">Loading tasks...</div>
@@ -196,22 +282,58 @@ const TaskViewer: React.FC = () => {
     return <div className="error">Error: {error}</div>
   }
 
+  const renderTaskGroup = (title: string, tasks: GroupedTask[], isLast: boolean = false) => {
+    if (tasks.length === 0) return null
+
+    return (
+      <div className="time-group">
+        <h3 className="time-group-title">{title}</h3>
+        <ul className="external-id-list">
+          {tasks.map((groupedTask, index) => {
+            const isLastItem = isLast && index === tasks.length - 1
+            return (
+              <li
+                key={groupedTask.external_id}
+                ref={isLastItem ? lastTaskElementRef : undefined}
+                className={`external-id-item ${selectedExternalId === groupedTask.external_id ? 'active' : ''}`}
+                onClick={() => setSelectedExternalId(groupedTask.external_id)}
+              >
+                <span className="external-id-name">{groupedTask.external_id}</span>
+                <span className="task-count">{groupedTask.task_count} tasks</span>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    )
+  }
+
   return (
     <div className="task-viewer">
       <div className="sidebar">
-        <h2>External IDs</h2>
-        <ul className="external-id-list">
-          {externalIds.map(externalId => (
-            <li 
-              key={externalId}
-              className={`external-id-item ${selectedExternalId === externalId ? 'active' : ''}`}
-              onClick={() => setSelectedExternalId(externalId)}
-            >
-              <span className="external-id-name">{externalId}</span>
-              <span className="task-count">{groupedTasks[externalId].length} tasks</span>
-            </li>
-          ))}
-        </ul>
+        <div className="sidebar-header">
+          <img src="/task-manager-logo.png" alt="" className="logo" />
+          <h2>Task Manager</h2>
+        </div>
+        
+        <div className="tasks-list">
+          {renderTaskGroup('Today', categorizedTasks.today)}
+          {renderTaskGroup('Yesterday', categorizedTasks.yesterday)}
+          {renderTaskGroup('Previous 7 Days', categorizedTasks.last7Days)}
+          {renderTaskGroup('Older', categorizedTasks.older, true)}
+          
+          {loadingMore && (
+            <div className="loading-more">
+              <span>Loading more tasks...</span>
+            </div>
+          )}
+          
+          {!hasMore && displayedTasks.length > 0 && (
+            <div className="no-more-tasks">
+              <span>All tasks loaded</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="main-content">
