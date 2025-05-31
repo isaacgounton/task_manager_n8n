@@ -336,7 +336,14 @@ const TaskViewer: React.FC = () => {
                 className={`external-id-item ${selectedExternalId === groupedTask.external_id ? 'active' : ''}`}
                 onClick={() => setSelectedExternalId(groupedTask.external_id)}
               >
-                <span className="external-id-name">{groupedTask.external_id}</span>
+                <div className="external-id-header-row">
+                  <span className="external-id-name">{groupedTask.external_id}</span>
+                  {(() => {
+                    const workflowTasks = groupedTasks[groupedTask.external_id] || []
+                    const hasErrors = workflowTasks.some(task => task.status === 'failed')
+                    return hasErrors ? <span className="error-indicator" title="Contains failed tasks">⚠️</span> : null
+                  })()}
+                </div>
                 <span className="task-count">{groupedTask.task_count} tasks</span>
               </li>
             )
@@ -416,6 +423,22 @@ const TaskViewer: React.FC = () => {
           <p className="last-updated">Last updated: {lastUpdated.toLocaleTimeString()}</p>
         </div>
 
+        {selectedExternalId && groupedTasks[selectedExternalId] && (() => {
+          const failedTasks = groupedTasks[selectedExternalId].filter(task => task.status === 'failed')
+          if (failedTasks.length > 0) {
+            return (
+              <div className="error-alert">
+                <div className="error-alert-icon">⚠️</div>
+                <div className="error-alert-content">
+                  <h3>Workflow contains {failedTasks.length} failed task{failedTasks.length > 1 ? 's' : ''}</h3>
+                  <p>Check the error messages below for details</p>
+                </div>
+              </div>
+            )
+          }
+          return null
+        })()}
+
         {selectedExternalId && groupedTasks[selectedExternalId] && (
           <div className="external-id-group">
             <div className="external-id-header">
@@ -470,7 +493,10 @@ const TaskViewer: React.FC = () => {
                   {task.error_message && (
                     <div className="error-section">
                       <span className="label">Error:</span>
-                      <div className="error-message">{task.error_message}</div>
+                      <div className="error-message">
+                        <span className="error-icon">❌</span>
+                        {task.error_message}
+                      </div>
                     </div>
                   )}
 
