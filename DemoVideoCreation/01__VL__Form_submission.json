@@ -13,7 +13,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        380,
+        360,
         300
       ],
       "id": "8409ea07-193e-4b3c-814b-45ba3e7e463a",
@@ -32,7 +32,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
       "position": [
-        580,
+        560,
         280
       ],
       "id": "a658ac66-1207-4847-a06a-012d3af3ec1f",
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_URL/webhook/ImageCreation",
+        "url": "https://dev.mindstreamai.app/webhook/ImageCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -91,7 +91,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1000,
+        980,
         340
       ],
       "id": "e0d31763-a05c-4642-b30c-25b99a5fe652",
@@ -100,7 +100,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/create-task",
+        "url": "=https://dev.mindstreamai.app/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -113,6 +113,10 @@
             {
               "name": "external_id",
               "value": "={{ $json.external_id }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
             }
           ]
         },
@@ -121,8 +125,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        200,
-        160
+        180,
+        320
       ],
       "id": "b35fd930-a286-4bfb-a30f-ea73a1a264e5",
       "name": "TM_SIMPLE_NODE",
@@ -303,7 +307,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
       "position": [
-        400,
+        380,
         80
       ],
       "id": "5274488f-1bd6-4c92-b74d-c7b0035473be",
@@ -312,7 +316,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -323,7 +327,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        800,
+        780,
         340
       ],
       "id": "86acc784-48a2-4de2-9c0f-55e83f2eba23",
@@ -354,22 +358,6 @@
     {
       "parameters": {
         "content": "## Task  Manager Nods",
-        "height": 560,
-        "width": 280,
-        "color": 3
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        3200,
-        440
-      ],
-      "id": "86016db0-4209-4a35-ad72-178f34f5752c",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "content": "## Task  Manager Nods",
         "height": 460,
         "width": 480,
         "color": 3
@@ -377,7 +365,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        720,
+        700,
         0
       ],
       "id": "6bc3377b-2e22-42d9-8255-120d005f35e2",
@@ -495,7 +483,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        800,
+        780,
         60
       ],
       "id": "7ea7b7a7-1970-4d8b-af9e-5bde8a7620f2",
@@ -503,12 +491,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// Fixed merge logic for nodes with different data shapes\n\nconst getInside = $('InsideJSON').item.json || {};\nconst getOutside = $('OutsideJSON').item.json.result || {};\n\nreturn [\n  {\n    json: {\n      status: $('OutsideJSON').item.json.status || 'unknown',\n      result: {\n        ...getInside,\n        ...getOutside\n      }\n    }\n  }\n];\n"
+        "jsCode": "// merge helper for the other two nodes\nconst inside  = $node[\"InsideJSON\"].json ?? {};\nconst outside = ($node[\"OutsideJSON\"].json?.result) ?? {};\n\nreturn [\n  {\n    json: {\n      status: $node[\"OutsideJSON\"].json?.status ?? 'unknown',\n      result: {\n        ...inside,\n        ...outside,\n      },\n    },\n  },\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1000,
+        980,
         200
       ],
       "id": "3453742b-5a88-40cc-8892-6388a27aab8e",
@@ -597,11 +585,40 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        800,
+        780,
         200
       ],
       "id": "53539877-340e-4c2f-a610-1031e831db70",
       "name": "InsideJSON"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "482b635c-43a5-4857-b66e-c68f1796cbca",
+              "name": "workflow",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "65bb894b-64fc-41ff-9a6a-5840b692b1f5",
+              "name": "execution",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        140,
+        80
+      ],
+      "id": "d90a759b-c929-42f9-aead-783169eb3b94",
+      "name": "Workflow-Execution"
     }
   ],
   "connections": {
@@ -642,7 +659,7 @@
       "main": [
         [
           {
-            "node": "GenerateUniqueID",
+            "node": "Workflow-Execution",
             "type": "main",
             "index": 0
           }
@@ -709,6 +726,17 @@
         [
           {
             "node": "CreateJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow-Execution": {
+      "main": [
+        [
+          {
+            "node": "GenerateUniqueID",
             "type": "main",
             "index": 0
           }

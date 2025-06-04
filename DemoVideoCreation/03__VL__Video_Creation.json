@@ -254,74 +254,8 @@
     },
     {
       "parameters": {
-        "url": "=https://YOUR_URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -1260,
-        -60
-      ],
-      "id": "92436d02-e6b1-409d-a629-6e66f2ea3827",
-      "name": "TM_GetStatus",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "ls9itmRH8ZrWv4rJ",
-          "name": "TaskManager DEMO AUTH"
-        }
-      }
-    },
-    {
-      "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/create-task",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "task_type",
-              "value": "video_processing"
-            },
-            {
-              "name": "external_id",
-              "value": "={{ $json.body.external_id }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -1160,
-        -260
-      ],
-      "id": "0fb320a4-e7f0-43ee-a4a7-bd2f685956e5",
-      "name": "TM_SIMPLE_NODE",
-      "credentials": {
-        "httpBearerAuth": {
-          "id": "x1NwvfmOBn59qCFq",
-          "name": "Task Manager DEMO AUTH"
-        },
-        "httpBasicAuth": {
-          "id": "tOKuohk9XqCLpfXA",
-          "name": "Unnamed credential"
-        },
-        "httpHeaderAuth": {
-          "id": "ls9itmRH8ZrWv4rJ",
-          "name": "TaskManager DEMO AUTH"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -332,7 +266,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1100,
+        -1140,
         20
       ],
       "id": "8eda15eb-0517-40c0-8d2d-b99537aae526",
@@ -347,7 +281,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://YOUR_URL/webhook/AudioCreation",
+        "url": "https://dev.mindstreamai.app/webhook/AudioCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -406,7 +340,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://YOUR_URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -573,6 +507,105 @@
       ],
       "id": "58499001-a5ae-406f-b357-0dbc686fe0c0",
       "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1320,
+        20
+      ],
+      "id": "92436d02-e6b1-409d-a629-6e66f2ea3827",
+      "name": "TM_GetStatus",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "482b635c-43a5-4857-b66e-c68f1796cbca",
+              "name": "workflow",
+              "value": "={{ $workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "65bb894b-64fc-41ff-9a6a-5840b692b1f5",
+              "name": "execution",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1180,
+        -260
+      ],
+      "id": "5c16a711-07b8-49fc-8e08-e7268e9f8e0c",
+      "name": "Workflow-Execution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "task_type",
+              "value": "video_processing"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $('Webhook').item.json.body.external_id }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1340,
+        -120
+      ],
+      "id": "83e1a55b-a1f2-4e5c-8b2c-474e6742e567",
+      "name": "TM_SIMPLE_NODE",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "x1NwvfmOBn59qCFq",
+          "name": "Task Manager DEMO AUTH"
+        },
+        "httpBasicAuth": {
+          "id": "tOKuohk9XqCLpfXA",
+          "name": "Unnamed credential"
+        },
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
     }
   ],
   "connections": {
@@ -671,29 +704,7 @@
       "main": [
         [
           {
-            "node": "TM_SIMPLE_NODE",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "TM_GetStatus": {
-      "main": [
-        [
-          {
-            "node": "TM_SetStatus_Start",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "TM_SIMPLE_NODE": {
-      "main": [
-        [
-          {
-            "node": "TM_GetStatus",
+            "node": "Workflow-Execution",
             "type": "main",
             "index": 0
           }
@@ -749,6 +760,39 @@
         [
           {
             "node": "InsideJSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_GetStatus": {
+      "main": [
+        [
+          {
+            "node": "TM_SetStatus_Start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow-Execution": {
+      "main": [
+        [
+          {
+            "node": "TM_SIMPLE_NODE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TM_SIMPLE_NODE": {
+      "main": [
+        [
+          {
+            "node": "TM_GetStatus",
             "type": "main",
             "index": 0
           }
