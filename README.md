@@ -16,6 +16,8 @@ A powerful, low-code orchestration system built with n8n workflows for managing 
 ### Supabase Database
 - A Supabase project for storing task data
 - The **free tier is sufficient** (includes 500MB database, unlimited API requests)
+  Please be aware that Supabase doesn't allow your N8N instance to connect to the database using IPV4, you need to enable IPV6 on your docker instance/host as **free tier** only allows IPV6 connections,
+  your docker needs to be able to resolve IPV6 addresses.
 - **How to create a Supabase account:**
   1. Go to [supabase.com](https://supabase.com)
   2. Click "Start your project" and sign up with GitHub or email
