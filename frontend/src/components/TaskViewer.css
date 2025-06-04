@@ -522,6 +522,45 @@
   border: 1px solid #e9ecef;
 }
 
+.metadata-section .label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.metadata-content {
+  margin-top: 10px;
+}
+
+.metadata-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.metadata-key {
+  font-weight: 600;
+  margin-right: 10px;
+  color: #666;
+  min-width: 80px;
+}
+
+.metadata-link {
+  color: #0066cc;
+  text-decoration: none;
+  padding: 2px 6px;
+  background: #e1ecf4;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.metadata-link:hover {
+  background: #cfe6f7;
+  color: #0052cc;
+  text-decoration: underline;
+}
+
 .error-section {
   background-color: #fee;
   border-color: #fcc;

@@ -737,9 +737,38 @@ const TaskViewer: React.FC = () => {
                   {task.metadata && Object.keys(task.metadata).length > 0 && (
                     <div className="metadata-section">
                       <span className="label">Metadata:</span>
-                      <pre className="json-content">
-                        {JSON.stringify(task.metadata, null, 2)}
-                      </pre>
+                      <div className="metadata-content">
+                        {task.metadata.workflow && task.metadata.execution ? (
+                          <>
+                            <div className="metadata-item">
+                              <span className="metadata-key">Workflow:</span>
+                              <a 
+                                href={`${process.env.REACT_APP_N8N_INDEX_URL || 'http://localhost:5678'}/workflow/${task.metadata.workflow}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="metadata-link"
+                              >
+                                {task.metadata.workflow}
+                              </a>
+                            </div>
+                            <div className="metadata-item">
+                              <span className="metadata-key">Execution:</span>
+                              <a 
+                                href={`${process.env.REACT_APP_N8N_INDEX_URL || 'http://localhost:5678'}/workflow/${task.metadata.workflow}/executions/${task.metadata.execution}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="metadata-link"
+                              >
+                                {task.metadata.execution}
+                              </a>
+                            </div>
+                          </>
+                        ) : (
+                          <pre className="json-content">
+                            {JSON.stringify(task.metadata, null, 2)}
+                          </pre>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
