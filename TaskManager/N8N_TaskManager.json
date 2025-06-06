@@ -1,0 +1,1553 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-task",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "95fb9bba-421c-41ab-95a6-0ffad86d2d4c",
+      "name": "Webhook - Create Task",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        1180
+      ],
+      "webhookId": "9c8855a9-c303-4270-b6f1-88794aa4ee29",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "ea6eaf1f-6edc-4978-b785-771ba5b84c03",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        300,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Task Creation Workflow\n\nThis workflow enables secure, automated creation of new async task records via a REST API. It processes incoming JSON data, generates a unique task ID, saves the task to a Supabase table, and returns the full task object as a response.\n\n📥 Endpoint Overview\nMethod: POST\nPath: /webhook/create-task\nAuth: Header Authentication (API key via \"Authorization\" header)\nResponse: JSON body with the created task details\nUse Case: Used by clients or services to submit a new async task for processing\n\n## Expected Webhook Payload:\n```json\n{\n  \"external_id\": \"abc123\",\n  \"poll_url\": \"https://dev.service.com/job/abc123/status\",\n  \"poll_method\": \"GET\",\n  \"task_type\": \"data_processing\",\n  \"max_attempts\": 10,\n  \"timeout_minutes\": 120\n}\n```\n\n## Response:\n```json\n[\n  {\n    \"task_id\": \"dd69a407-82f2-4d64-ba9b-a47af52dc0ee\",\n    \"status\": \"pending\",\n    \"external_id\": \"abc123\",\n    \"poll_url\": \"https://dev.service.com/job/abc123/status\",\n    \"poll_method\": \"GET\",\n    \"task_type\": \"data_processing\",\n    \"result\": null,\n    \"error_message\": null,\n    \"created_at\": \"2025-05-26T10:34:39.633Z\",\n    \"updated_at\": \"2025-05-26T10:34:39.633Z\",\n    \"attempt_count\": 10,\n    \"max_attempts\": 10,\n    \"timeout_minutes\": 120,\n    \"metadata\": {},\n    \"user_id\": null\n  }\n]\n```\n\nExample:\n```json\ncurl -X POST https://YOURULR/webhook/create-task \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: API_KEY\" \\\n  -d '{\n    \"external_id\": \"job-123\",\n    \"poll_url\": \"https://dev.example.com/job/123/status\",\n    \"poll_method\": \"GET\",\n    \"task_type\": \"data_processing\",\n    \"max_attempts\": 10,\n    \"timeout_minutes\": 60\n  }'\n```\n\n✅ Benefits\n🔒 Secured with API key via headers\n🆔 Auto-generates Task IDs\n⏱️ Includes full lifecycle config (timeouts, max attempts)\n📄 Returns full task structure, ready for frontend display or polling",
+        "height": 1540,
+        "width": 1040
+      },
+      "id": "0d11650c-8cd9-41e6-80f4-32cff6d1742c",
+      "name": "Workflow Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -520,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function to generate UUID v4\nfunction generateUUID() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\n// Get webhook body data\nconst webhookData = $input.item.json.body || {};\n\n// Generate UUID\nconst taskId = generateUUID();\n\n// Return merged data ready for Supabase\nreturn {\n  task_id: taskId,\n  external_id: webhookData.external_id || null,\n  poll_url: webhookData.poll_url || null,\n  poll_method: webhookData.poll_method || 'GET',\n  task_type: webhookData.task_type || null,\n  max_attempts: webhookData.max_attempts || 10,\n  timeout_minutes: webhookData.timeout_minutes || 120,\n  status: 'pending',\n  created_at: new Date().toISOString(),\n  updated_at: new Date().toISOString(),\n  metadata: webhookData.metadata || {}\n};"
+      },
+      "id": "b3cc5f3e-13af-4b8e-bc2e-850d29dd4c2d",
+      "name": "Generate_UUID_Merge_Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        1180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-task/:taskId",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e4cc5b47-c9cd-4e82-93b9-553828d00413",
+      "name": "Webhook - Update Task",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        740,
+        760
+      ],
+      "webhookId": "ade4dfea-d284-4c02-95f0-4deeb1435983",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from webhook\nconst taskId = $input.item.json.params.taskId;\nconst updateData = $input.item.json.body;\n\n// Prepare update fields\nconst updates = {\n  task_id: taskId,  // Include for response\n  updated_at: new Date().toISOString()\n};\n\n// Only include fields that were provided\nif (updateData.status) updates.status = updateData.status;\nif (updateData.result !== undefined) updates.result = updateData.result;\nif (updateData.error_message !== undefined) updates.error_message = updateData.error_message;\nif (updateData.metadata !== undefined) updates.metadata = updateData.metadata;\nif (updateData.attempt_count !== undefined) updates.attempt_count = updateData.attempt_count;\n\nreturn [{ json: updates }];"
+      },
+      "id": "019c9eed-ad38-4183-9266-be93e3a830eb",
+      "name": "Prepare Update Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $('Webhook - Update Task').item.json.body.status }}",
+              "operation": "equal",
+              "value2": "={{ $json.status }}"
+            }
+          ]
+        }
+      },
+      "id": "9d53b4d2-4cde-4ebb-b168-6534f34ec4e7",
+      "name": "Update Successful?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "7201d2fa-17bd-45f4-ad24-d256d28cf22c",
+      "name": "Respond - Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"message\": \"Error: Update failed\",\n  \"task_id\": \"{{ $json.task_id }}\",\n  \"updated_at\": \"{{ $json.updated_at }}\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "id": "b3b305d2-d751-41cb-bb61-b6729c247263",
+      "name": "Respond - Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# Update Task Workflow\n\nThis workflow is designed to handle updates to a task via a webhook endpoint. The incoming request provides task updates, which are processed, conditionally checked, updated in a PostgreSQL database, and responded to with success or error messages.\n\n📬 1. Webhook – Webhook - Update Task\nNode Type: Webhook\nMethod: POST\nPath: /update-task/:taskId\nResponse Mode: responseNode\n\n🔍 Purpose:\nThis webhook listens for HTTP POST requests at the endpoint:\n/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/:taskId\n\n## Supported Fields:\n- status: 'pending' | 'in_progress' | 'completed' | 'failed'\n- result: JSON object with results\n- error_message: String with error details\n- metadata: JSON object with custom data\n- attempt_count: Number\n\n## Example:\n```bash\ncurl -X POST https://URL/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/:taskId \\\n  -H \"Authorization: API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"status\": \"completed\",\n    \"result\": {\"success\": true}\n  }'\n```\n\n✅ Use Cases\nUpdating task statuses from external services or microservices.\nLogging retry attempts or error metadata in task execution.\nProviding a RESTful endpoint to interact with Supabase-managed task data.",
+        "height": 1540,
+        "width": 1180
+      },
+      "id": "6202efc5-ecec-4cfa-93fe-55bdf233a412",
+      "name": "Update Task Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        680,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "path": "task-status/:taskId",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "072a2e52-4101-455c-9737-cbc241424019",
+      "name": "Webhook - Query Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        2040,
+        1100
+      ],
+      "webhookId": "2d9c4c2e-c39a-4da2-aaad-2cd096e2009d",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ls9itmRH8ZrWv4rJ",
+          "name": "TaskManager DEMO AUTH"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Status Query Workflow\n\nThis n8n workflow creates a secure REST API endpoint that allows clients to query the status of a task by providing the taskId. It is ideal for polling or retrieving real-time status and result data of asynchronous background jobs.\n\n🔗 Endpoint Summary\nHTTP Method: GET\nEndpoint: /webhook/task-status/:taskId\nAuthentication: HeaderAuth (Authorization: API_KEY)\nResponse Type: JSON\nResponse Code:\n200 → Task found (any state)\n404 → Task ID not found\n\nRequest:\n```json\ncurl -X GET https://URL/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/dd69a407-82f2-4d64-ba9b-a47af52dc0ee \\\n-H \"Authorization: API_KEY\"\n```\n\nSuccessful Response Example (200 OK):\n\n```json\n[{\n  \"task_id\": \"dd69a407-82f2-4d64-ba9b-a47af52dc0ee\",\n  \"status\": \"completed\",\n  \"external_id\": \"job-123\",\n  \"poll_url\": \"https://dev.example.com/job/123/status\",\n  \"poll_method\": \"GET\",\n  \"task_type\": \"data_processing\",\n  \"result\": null,\n  \"error_message\": null,\n  \"created_at\": \"2025-05-26T10:34:39.633Z\",\n  \"updated_at\": \"2025-05-26T11:05:43.918Z\",\n  \"attempt_count\": 10,\n  \"max_attempts\": 10,\n  \"timeout_minutes\": 60,\n  \"metadata\": {},\n  \"user_id\": null\n}]\n```\n\nNot Found Example (404):\n\n```json\n{\n  \"error\": \"Task ID not found.\"\n}\n```",
+        "height": 1840,
+        "width": 1330
+      },
+      "id": "d93b1616-eff4-48c0-ae59-3a77bf23c273",
+      "name": "Query Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"error\": \"Task ID not found.\"\n}",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "id": "49e5e44f-1529-4897-9e6d-048968b8221b",
+      "name": "Respond - Not found 404",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "f1d6f195-a896-4780-ad20-bf6a78cb3ef5",
+      "name": "Respond - Pending",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        1120
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c6a0da83-01e4-4efa-9919-34cbcafbd559",
+      "name": "Respond - Failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "5712fce4-5f61-4617-b7dd-3541b32c7859",
+      "name": "Respond - Success1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        3080,
+        1460
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
+        }
+      },
+      "id": "5249da06-94e1-4763-acf1-8396e648a4a9",
+      "name": "Every 2 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        1980
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "f88c9576-4fd0-4fe7-88c0-9aa98c53007d",
+      "name": "Process in Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [
+        380,
+        1980
+      ]
+    },
+    {
+      "parameters": {
+        "method": "={{ $json.poll_method }}",
+        "url": "={{ $json.poll_url }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "74991638-8055-468c-b224-27248e2f2d3f",
+      "name": "Poll External API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        580,
+        1980
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process the API response and determine task status\nconst item = $input.item.json;\nconst taskData = $node['Process in Batches'].json;\nconst apiResponse = item;\n\ntry {\n  let newStatus = taskData.status;\n  let result = null;\n  let errorMessage = null;\n  \n  // Check if the HTTP request failed\n  if (apiResponse.error) {\n    // Increment attempt count\n    const attemptCount = (taskData.attempt_count || 0) + 1;\n    \n    if (attemptCount >= taskData.max_attempts) {\n      newStatus = 'failed';\n      errorMessage = `Max attempts reached. Last error: ${apiResponse.error.message}`;\n    } else {\n      // Keep current status, just increment attempts\n      newStatus = taskData.status;\n    }\n    \n    return {\n      json: {\n        task_id: taskData.task_id,\n        status: newStatus,\n        attempt_count: attemptCount,\n        error_message: errorMessage,\n        updated_at: new Date().toISOString()\n      }\n    };\n  }\n  \n  // Process successful response\n  // Adapt this based on your API's response structure\n  if (apiResponse.status === 'completed' || apiResponse.status === 'done') {\n    newStatus = 'completed';\n    result = JSON.stringify(apiResponse.result || apiResponse);\n  } else if (apiResponse.status === 'failed' || apiResponse.status === 'error') {\n    newStatus = 'failed';\n    errorMessage = apiResponse.error || apiResponse.message || 'Task failed';\n  } else if (apiResponse.status === 'running' || apiResponse.status === 'in_progress') {\n    newStatus = 'in_progress';\n  }\n  \n  // Check for timeout\n  const createdAt = new Date(taskData.created_at);\n  const now = new Date();\n  const minutesElapsed = (now - createdAt) / (1000 * 60);\n  \n  if (minutesElapsed > taskData.timeout_minutes) {\n    newStatus = 'failed';\n    errorMessage = `Task timed out after ${taskData.timeout_minutes} minutes`;\n  }\n  \n  return {\n    json: {\n      task_id: taskData.task_id,\n      status: newStatus,\n      result: result,\n      error_message: errorMessage,\n      attempt_count: (taskData.attempt_count || 0) + 1,\n      updated_at: new Date().toISOString()\n    }\n  };\n} catch (error) {\n  return {\n    json: {\n      task_id: taskData.task_id,\n      status: taskData.status,\n      error_message: `Processing error: ${error.message}`,\n      attempt_count: (taskData.attempt_count || 0) + 1,\n      updated_at: new Date().toISOString()\n    }\n  };\n}"
+      },
+      "id": "c9dc228e-3282-46e4-b1a3-4d3941cf72fd",
+      "name": "Process API Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        1980
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": "task_manager",
+        "columns": {
+          "0": "s",
+          "1": "t",
+          "2": "a",
+          "3": "t",
+          "4": "u",
+          "5": "s",
+          "6": ",",
+          "7": "r",
+          "8": "e",
+          "9": "s",
+          "10": "u",
+          "11": "l",
+          "12": "t",
+          "13": ",",
+          "14": "e",
+          "15": "r",
+          "16": "r",
+          "17": "o",
+          "18": "r",
+          "19": "_",
+          "20": "m",
+          "21": "e",
+          "22": "s",
+          "23": "s",
+          "24": "a",
+          "25": "g",
+          "26": "e",
+          "27": ",",
+          "28": "a",
+          "29": "t",
+          "30": "t",
+          "31": "e",
+          "32": "m",
+          "33": "p",
+          "34": "t",
+          "35": "_",
+          "36": "c",
+          "37": "o",
+          "38": "u",
+          "39": "n",
+          "40": "t",
+          "41": ",",
+          "42": "u",
+          "43": "p",
+          "44": "d",
+          "45": "a",
+          "46": "t",
+          "47": "e",
+          "48": "d",
+          "49": "_",
+          "50": "a",
+          "51": "t",
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "external_id",
+              "displayName": "external_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "poll_url",
+              "displayName": "poll_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "poll_method",
+              "displayName": "poll_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "task_type",
+              "displayName": "task_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "result",
+              "displayName": "result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attempt_count",
+              "displayName": "attempt_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeout_minutes",
+              "displayName": "timeout_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "69758c0b-26e9-465d-8418-bbd4879cef07",
+      "name": "Update Task Status",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        980,
+        1980
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "failed"
+            }
+          ]
+        }
+      },
+      "id": "6fac9700-41b3-464e-995a-c37f529c8b74",
+      "name": "Task Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        1980
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U08LHK4F67K",
+          "mode": "list",
+          "cachedResultName": "slvalics"
+        },
+        "text": "Task X status",
+        "otherOptions": {}
+      },
+      "id": "6b4dd056-e501-446b-8c15-57bb3d30d387",
+      "name": "Send Alert (Slack)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        1960
+      ],
+      "webhookId": "ac0b199d-4958-4a2f-a584-132d15d0fe24",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "# Task Monitor Workflow\n\nThis n8n workflow automatically monitors asynchronous tasks managed in a Supabase-backed task_manager table. It polls external APIs, checks task status, updates the database accordingly, and sends alerts for failed tasks.\n\nRuns every 2 minutes to:\n1. Fetch pending/in-progress tasks from DB\n2. Poll their external APIs for status\n3. Update task status in DB\n4. Send alerts for failed tasks\n\n🧪 Example Use Case\nScenario:\nYour backend service creates long-running jobs (e.g., data processing, AI training, etc.), and saves them in a task_manager DB table. \nThis workflow:\nRegularly checks task states via API.\nUpdates the DB to reflect real-time status.\nSends you a Slack message if something fails or times out.\n\n✅ Benefits\nFully automated monitoring of async jobs.\nScalable processing using batch execution.\nAlerting integration with Slack ensures rapid incident response.\nRetry and timeout logic minimizes manual interventions.",
+        "height": 890,
+        "width": 1960
+      },
+      "id": "83de474e-67dd-4405-ae67-2de1f929c175",
+      "name": "Monitor Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        1400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "66ec4623-96dc-4f60-9d56-f66384754117",
+              "leftValue": "={{ $json.task_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        1980
+      ],
+      "id": "254e7f60-1957-44e6-ab81-29708edd858d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_id": "={{ $('Generate_UUID_Merge_Data').item.json.task_id }}",
+            "status": "={{ $('Generate_UUID_Merge_Data').item.json.status }}",
+            "updated_at": "={{ $('Generate_UUID_Merge_Data').item.json.update_at }}",
+            "result": "={{ $('Generate_UUID_Merge_Data').item.json.result }}",
+            "attempt_count": "={{ $('Generate_UUID_Merge_Data').item.json.attempt_count}}",
+            "max_attempts": "={{ $('Generate_UUID_Merge_Data').item.json.max_attempts}}",
+            "metadata": "={{ $('Generate_UUID_Merge_Data').item.json.metadata }}",
+            "user_id": "={{ $('Generate_UUID_Merge_Data').item.json.user_id}}",
+            "timeout_minutes": "={{ $('Generate_UUID_Merge_Data').item.json.timeout_minutes}}",
+            "created_at": "={{ $('Generate_UUID_Merge_Data').item.json.created_at}}",
+            "external_id": "={{ $('Generate_UUID_Merge_Data').item.json.external_id }}",
+            "poll_url": "={{ $('Generate_UUID_Merge_Data').item.json.poll_url }}",
+            "poll_method": "={{ $('Generate_UUID_Merge_Data').item.json.poll_method }}",
+            "task_type": "={{ $('Generate_UUID_Merge_Data').item.json.task_type }}",
+            "error_message": "={{ $('Generate_UUID_Merge_Data').item.json.error_message }}"
+          },
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_id",
+              "displayName": "external_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_url",
+              "displayName": "poll_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_method",
+              "displayName": "poll_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_type",
+              "displayName": "task_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "result",
+              "displayName": "result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempt_count",
+              "displayName": "attempt_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timeout_minutes",
+              "displayName": "timeout_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        100,
+        1180
+      ],
+      "id": "792a20c1-41dc-4fc7-9d39-994713c75bee",
+      "name": "Postgres Create Task",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "task_id": "={{ $json.task_id }}",
+            "status": "={{ $json.status }}",
+            "updated_at": "={{ $json.updated_at }}",
+            "result": "={{ $json.result }}",
+            "attempt_count": 0,
+            "max_attempts": 0,
+            "timeout_minutes": 0
+          },
+          "matchingColumns": [
+            "task_id"
+          ],
+          "schema": [
+            {
+              "id": "task_id",
+              "displayName": "task_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "external_id",
+              "displayName": "external_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_url",
+              "displayName": "poll_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "poll_method",
+              "displayName": "poll_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "task_type",
+              "displayName": "task_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "result",
+              "displayName": "result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempt_count",
+              "displayName": "attempt_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "max_attempts",
+              "displayName": "max_attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timeout_minutes",
+              "displayName": "timeout_minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1180,
+        760
+      ],
+      "id": "2be9d6c0-c1c1-4969-8506-8a1890ec4458",
+      "name": "Postgres Update Task",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "task_id",
+              "value": "={{ $json.params.taskId || 'NOTFOUND' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2300,
+        1100
+      ],
+      "id": "2da4ee31-4d79-4ce7-81b5-5b65ef551425",
+      "name": "Postgres Status",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d68154fd-d42c-4e69-8818-a5c631fde855",
+              "name": "task_id",
+              "value": "={{ $json.task_id ?? \"NOTFOUND\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2520,
+        1100
+      ],
+      "id": "ee4edd36-2e5a-484d-bc07-0bc521afc721",
+      "name": "Edit Fields Status"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dddaac0b-7e0e-4756-a12d-ddc9a92713f5",
+                    "leftValue": "={{ $json.task_id }}",
+                    "rightValue": "=NOTFOUND",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Task not found"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "pending",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "425dc982-cf04-4784-aa00-6d7e603f5b6e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Pending"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b3d51a0c-5c9d-49c6-944f-a3bd83e6f16e",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "949380b8-09c9-40b6-969d-124536c1889f",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Completed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2740,
+        1080
+      ],
+      "id": "ee6051ae-e5e0-46a1-aa93-955ec0b1af04",
+      "name": "Switch Status"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "task_manager",
+          "mode": "list",
+          "cachedResultName": "task_manager"
+        },
+        "returnAll": true,
+        "where": {
+          "values": [
+            {
+              "column": "status",
+              "value": "=pending"
+            },
+            {
+              "column": "status",
+              "value": "in_progress"
+            }
+          ]
+        },
+        "combineConditions": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -80,
+        1980
+      ],
+      "id": "2382a4e5-bcf8-4898-9f8b-760c5badd787",
+      "name": "Postgres Task Monitor",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "QS2nSiDzjJ5ExoHs",
+          "name": "SupaBase-N8N"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Create Task": {
+      "main": [
+        [
+          {
+            "node": "Generate_UUID_Merge_Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate_UUID_Merge_Data": {
+      "main": [
+        [
+          {
+            "node": "Postgres Create Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Update Task": {
+      "main": [
+        [
+          {
+            "node": "Prepare Update Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Update Data": {
+      "main": [
+        [
+          {
+            "node": "Postgres Update Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Successful?": {
+      "main": [
+        [
+          {
+            "node": "Respond - Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Query Status": {
+      "main": [
+        [
+          {
+            "node": "Postgres Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every 2 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Postgres Task Monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process in Batches": {
+      "main": [
+        [
+          {
+            "node": "Poll External API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll External API": {
+      "main": [
+        [
+          {
+            "node": "Process API Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process API Response": {
+      "main": [
+        [
+          {
+            "node": "Update Task Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Task Status": {
+      "main": [
+        [
+          {
+            "node": "Task Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Failed?": {
+      "main": [
+        [
+          {
+            "node": "Send Alert (Slack)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alert (Slack)": {
+      "main": [
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Process in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Create Task": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Update Task": {
+      "main": [
+        [
+          {
+            "node": "Update Successful?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Status": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Status": {
+      "main": [
+        [
+          {
+            "node": "Switch Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Status": {
+      "main": [
+        [
+          {
+            "node": "Respond - Not found 404",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Pending",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond - Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Task Monitor": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
+  }
+}

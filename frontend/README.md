@@ -1,46 +1,146 @@
-# Getting Started with Create React App
+# Task Manager Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React-based real-time task monitoring dashboard for the n8n Task Manager system. This frontend provides visual monitoring of asynchronous tasks with support for media display (images, videos, audio) and live status updates.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Real-time Updates**: Automatic refresh every 3 seconds for active tasks
+- **Supabase Integration**: Live subscriptions for instant task status changes
+- **Media Display**: Built-in support for images, videos, and audio playback
+- **Task Filtering**: Filter by status (pending, in_progress, completed, failed)
+- **Running Time**: Live tracking of task execution duration
+- **Responsive Design**: Works on desktop and mobile devices
 
-### `npm start`
+## Prerequisites
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Node.js 14+ and npm
+- Supabase account with task_manager table configured
+- n8n Task Manager workflow running and accessible
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Installation
 
-### `npm test`
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### `npm run build`
+3. Create environment configuration:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Or create `.env` manually with:
+   ```env
+   REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+   REACT_APP_SUPABASE_ANON_KEY=your-anon-public-key
+   REACT_APP_N8N_INDEX_URL=https://url-to-n8n/
+   ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. Get your Supabase credentials:
+   - Go to your Supabase project dashboard
+   - Navigate to Settings → API
+   - Copy the Project URL and anon/public key
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Development
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Start the development server:
+```bash
+npm start
+```
 
-### `npm run eject`
+The app will run at [http://localhost:3000](http://localhost:3000)
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Production Build
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Build for production deployment:
+```bash
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+The optimized build will be in the `build/` directory.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Deployment Options
 
-## Learn More
+### Static Hosting (Recommended)
+Deploy the `build/` directory to any static hosting service:
+- Vercel
+- Netlify  
+- GitHub Pages
+- AWS S3 + CloudFront
+- Any web server (nginx, Apache)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Docker
+```dockerfile
+FROM node:18-alpine as build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+```
+
+## Configuration
+
+### Environment Variables
+- `REACT_APP_SUPABASE_URL`: Your Supabase project URL
+- `REACT_APP_SUPABASE_ANON_KEY`: Supabase anonymous/public key (safe for frontend)
+
+### Task Status Colors
+- **Pending**: Gray
+- **In Progress**: Blue (with animated indicator)
+- **Completed**: Green
+- **Failed**: Red
+
+## Architecture
+
+### Components
+- **TaskViewer**: Main component handling task display and real-time updates
+- **Media Display**: Automatic detection and rendering of media results
+- **Status Filters**: Toggle buttons for filtering tasks by status
+
+### Data Flow
+1. Initial load fetches all tasks from Supabase
+2. Establishes real-time subscription for updates
+3. Auto-refresh every 3 seconds for running time updates
+4. Unsubscribes on component unmount
+
+## Troubleshooting
+
+### Tasks Not Updating
+1. Check Supabase connection in browser console
+2. Verify `.env` variables are set correctly
+3. Ensure RLS policies allow SELECT on task_manager table
+
+### Media Not Displaying
+1. Check CORS settings on media hosting service
+2. Verify media URLs are publicly accessible
+3. Check browser console for loading errors
+
+### Connection Issues
+1. Verify Supabase project is active
+2. Check network connectivity
+3. Ensure anon key matches your Supabase project
+
+## Development Notes
+
+- Built with Create React App
+- TypeScript for type safety
+- Supabase client v2 for real-time features
+- CSS modules for styling
+- No additional UI framework dependencies
+
+## Scripts
+
+- `npm start`: Start development server
+- `npm test`: Run tests
+- `npm run build`: Create production build
+- `npm run eject`: Eject from Create React App (not recommended)

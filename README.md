@@ -74,22 +74,26 @@ Once your Supabase project is ready:
 
 ![n8n Folder Creation](images/n8n-folder-creation.png)
 
-### 2. Import Task Manager Workflows
+### 2. Import Task Manager Workflow
 1. Navigate to your Task Manager folder
-2. Import the following workflow files from the `TaskManager/` directory:
-   - `N8N_Task_Creation_Workflow.json` - Creates new tasks via webhook
-   - `N8N_Task_Monitor_Workflow.json` - Monitors and updates task status
-   - `N8N_Get_Status_Query_Workflow.json` - Query task status endpoint
-   - `N8N_Task_Update_Workflow.json` - Manual task updates via webhook
+2. Import the consolidated workflow from the `TaskManager/` directory:
+   - `N8N_TaskManager.json` - The complete Task Manager system in a single workflow
    
-3. To import each workflow:
+   This consolidated workflow includes all functionality:
+   - **Create Task** - POST webhook (`/webhook/create-task`) that creates tasks with unique IDs
+   - **Task Monitor** - Scheduled every 2 mins to poll external APIs and update task status
+   - **Query Task Status** - GET endpoint (`/webhook/task-status/:taskId`) to fetch task status
+   - **Update Task** - POST endpoint (`/webhook/{UUID}/update-task/:taskId`) for manual task updates
+   
+3. To import the workflow:
    - Click "Add workflow" → "Import from File" 
-   - Select the JSON file
+   - Select `N8N_TaskManager.json`
    - The workflow will open in the editor
 
 4. After importing, you'll need to:
-   - Update the PostgreSQL credentials in each workflow
-   - Activate each workflow (toggle the "Active" switch)
+   - Update the PostgreSQL credentials in the workflow
+   - Activate the workflow (toggle the "Active" switch)
+   - Enable the Schedule trigger in the Task Monitor section if you want automatic polling
    - Note the webhook URLs for your API endpoints
 
 ### 3. Configure and Test Task Manager Nodes
@@ -171,28 +175,31 @@ Note: Make sure you've configured the `.env` file with your Supabase credentials
 
 ### Important: Webhook URL Configuration
 
-When setting up Task Manager nodes in n8n workflows, it's crucial to verify and update the webhook URLs in trigger nodes:
+The consolidated Task Manager workflow (`N8N_TaskManager.json`) includes all webhook endpoints in a single workflow:
 
 1. **Create Task Webhook**
-   - Default pattern: `webhook/create-task`
-   - Used in the Create Task workflow
+   - Pattern: `/webhook/create-task`
+   - Method: POST
+   - Creates new tasks with unique IDs
 
-2. **Update Task Webhook (SetStatus)**
-   - Pattern: `webhook/{UUID}/update-task/`
-   - Example: `webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/`
-   - **IMPORTANT**: Check and update the UUID in your workflow - it may differ from the example
+2. **Update Task Webhook**
+   - Pattern: `/webhook/update-task/:taskId`
+   - Method: POST
+   - The `:taskId` is dynamically replaced with the actual task ID
 
-3. **Get Status Webhook (GetStatus)**
-   - Pattern: `webhook/{UUID}/task-status/`
-   - Example: `webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/`
-   - **IMPORTANT**: Check and update the UUID in your workflow - it may differ from the example
+3. **Get Status Webhook**
+   - Pattern: `/webhook/task-status/:taskId`
+   - Method: GET
+   - The `:taskId` is dynamically replaced with the actual task ID
 
 ### Step 1: Verify Webhook URLs
-Before using any Task Manager workflow:
-1. Open each webhook trigger node
-2. Check the webhook URL path
-3. Update the UUID portion if needed to match your n8n instance
-4. Ensure the webhook is active and accessible
+After importing the consolidated workflow:
+1. Check that all webhook nodes show as active
+2. Note your n8n instance's base URL for API calls
+3. The webhook URLs will be:
+   - Create: `https://your-instance.n8n.cloud/webhook/create-task`
+   - Update: `https://your-instance.n8n.cloud/webhook/{UUID}/update-task/{task-id}`
+   - Query: `https://your-instance.n8n.cloud/webhook/task-status/{task-id}`
 
 ## Creating Tasks with Proper Configuration
 
@@ -259,7 +266,7 @@ This pattern prevents tasks from appearing stalled and provides accurate monitor
 
 After receiving a task_id from task creation:
 ```json
-POST /webhook/{task-id}/update-task/
+POST /webhook/update-task/{task-id}
 {
   "status": "in_progress"
 }
@@ -267,7 +274,7 @@ POST /webhook/{task-id}/update-task/
 
 On successful completion:
 ```json
-POST /webhook/{task-id}/update-task/
+POST /webhook/update-task/{task-id}
 {
   "status": "completed",
   "result": {
@@ -279,7 +286,7 @@ POST /webhook/{task-id}/update-task/
 
 On failure:
 ```json
-POST /webhook/{task-id}/update-task/
+POST /webhook/{UUID}/update-task/{task-id}
 {
   "status": "failed",
   "error": "API rate limit exceeded"
@@ -328,7 +335,7 @@ The node group performs these operations:
 4. **Update Task Status** (TM_SetStatus_COMPLETE node):
    - Makes a POST request to the update-task webhook
    - Requires authentication credentials
-   - URL pattern: `webhook/{UUID}/update-task/{task_id}`
+   - URL pattern: `/webhook/{UUID}/update-task/{task_id}`
 
 5. **Trigger Next Workflow** (TriggerWorkflow node):
    - After updating the task status, call the next workflow in your pipeline
