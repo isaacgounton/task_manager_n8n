@@ -58,7 +58,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=A digital caricature portrait of a {{ $('TM_GetStatus').item.json.result['Subject Description'] }}, with [notable facial features or expression]. The portrait is rendered in a {{ $('TM_GetStatus').item.json.result['Visual Style'] }} aesthetic, with an exaggeration level of {{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}. The background features {{ $('TM_GetStatus').item.json.Background || \"\" }}. The lighting is {{ $('TM_GetStatus').item.json['Lighting Style'] || \"\" }}, enhancing the stylized features and giving a whimsical, animated look.",
+        "text": "=A digital caricature portrait of a {{ $('TM_GetStatus').item.json.result.output['Subject description'] }}, with [notable facial features or expression]. The portrait is rendered in a {{ $('TM_GetStatus').item.json.result.output.Form.parseJson()['Visual Style'] }} aesthetic, with an exaggeration level of {{ $('TM_GetStatus').item.json.result.output.Form.parseJson()['Exaggeration Level'] }}. The background features {{ $('TM_GetStatus').item.json.Background || \"\" }}. The lighting is {{ $('TM_GetStatus').item.json['Lighting Style'] || \"\" }}, enhancing the stylized features and giving a whimsical, animated look.",
         "options": {
           "systemMessage": "=# Overview\nYou are an AI agent that transforms uploaded images into digital exaggerated caricature-style portraits rendered in a Pixar-style (or similar), based on adjustable exaggeration settings. These visuals are designed to be funny, whimsical, and engaging.\n\n## Prompt template to be used.\nA digital caricature portrait of a [describe subject: age, gender, ethnicity], wearing [clothing/accessory details], with [notable facial features or expression]. The portrait is rendered in a [Pixar-style / 3D toon / painterly] aesthetic, with an exaggeration level of [low / medium / high / extreme]. The background features [optional: scenery or color]. The lighting is [soft/studio/natural/etc.], enhancing the stylized features and giving a whimsical, animated look.\n\n## Exaggeration Level Guide:\nYou can use one of these levels to control how far the caricature pushes the features:\nLow – subtle exaggeration, nearly realistic\nMedium – playful stylization, like a Pixar character\nHigh – strong cartoon effect, large eyes, wide smile, rounded features\nExtreme – full caricature, highly expressive and almost comical\n\n\n## Objective:\n- If there is an image input, analyze the subject's key features (face, expression, outfit) to generate a vivid and funny visual prompt.\n- The result should create a caricature that fits the style and exaggeration level requested.\n\n## Output Instructions:\n- Output only the final image prompt — nothing else.\n- No quotation marks around the prompt.\n- No extra commentary, explanations, or rephrasings.\n- Ensure the prompt feels complete — no placeholders or missing parts.\n\n## Example Prompt Format:\nA digital caricature portrait of a middle-aged woman with light skin, wearing a black bowler hat and a sleeveless black dress with white polka dots. She has shoulder-length dark hair, expressive large eyes, and a confident smile. The portrait is rendered in a Pixar-style, with an exaggeration level of high. The background is a warm studio gradient. The lighting is soft and enhances her stylized facial features."
         }
@@ -131,7 +131,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// n8n Code Node\n// Map aspect ratios to specific OpenAI resolution strings\n\nconst inputFormat = $('TM_GetStatus').first().json.result.Format?.trim();\n\nlet outputResolution = \"\";\n\nswitch (inputFormat) {\n  case \"1:1\":\n    outputResolution = \"1024x1024\";\n    break;\n  case \"16:9\":\n    outputResolution = \"1536x1024\";\n    break;\n  case \"9:16\":\n    outputResolution = \"1024x1536\";\n    break;\n  default:\n    outputResolution = \"1024x1024\";\n    break;\n}\n\nreturn [\n  {\n    json: {\n      Format: outputResolution\n    }\n  }\n];\n"
+        "jsCode": "// 1. Get the original Form JSON string\nlet formString = $('TM_GetStatus').first().json.result.output.Form;\n\n// 2. Parse it into an object\nlet formObj = JSON.parse(formString);\n\n// 3. Extract the Format value (after mapping, if you want to map it)\nconst inputFormat = formObj.Format?.trim();\n\nlet outputResolution = \"\";\n\nswitch (inputFormat) {\n  case \"1:1\":\n    outputResolution = \"1024x1024\";\n    break;\n  case \"16:9\":\n    outputResolution = \"1536x1024\";\n    break;\n  case \"9:16\":\n    outputResolution = \"1024x1536\";\n    break;\n  default:\n    outputResolution = \"1024x1024\";\n    break;\n}\n\n// If you want just the value (e.g. \"1024x1536\")\nreturn [\n  {\n    json: {\n      Format: outputResolution\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -223,7 +223,7 @@
     },
     {
       "parameters": {
-        "url": "={{ $('JSONInput').first().json[\"Upload Image\"] }}",
+        "url": "={{ $('TM_GetStatus').item.json.result.output.Form.parseJson()['Image to reference'] }}",
         "options": {
           "response": {
             "response": {
@@ -243,7 +243,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// n8n Code Node (v2)\n\n// 1. Get the original sheet data from the JSONInput node\nconst allJsonInput = $('TM_GetStatus').first().json.result ;\nconst original = allJsonInput.length\n  ? allJsonInput[0].json\n  : {};\n\n// 2. Safely trim Upload_Image\nconst rawUpload = original[\"Upload Image\"];\nconst uploadImage = (typeof rawUpload === \"string\")\n  ? rawUpload.trim()\n  : \"\";\n\n// 3. Safely trim Final_Image for fallback\nconst rawFinal = original[\"Final_Image\"];\nconst fallbackImage = (typeof rawFinal === \"string\")\n  ? rawFinal.trim()\n  : \"\";\n\n// 4. Decide which image to use\nconst imageToUse = uploadImage !== \"\" ? uploadImage : fallbackImage;\n\n// 5. Boolean flag\nconst hasValidImage = imageToUse !== \"\";\n\n// 6. Return result + chosen URL + indicator\nreturn [\n  {\n    json: {\n      result:      hasValidImage,    // true / false\n      image:       imageToUse,       // the URL you want\n      usedUpload:  uploadImage !== \"\"\n    }\n  }\n];\n"
+        "jsCode": "// 1. Get the Form JSON string from TM_GetStatus\nconst formString = $('TM_GetStatus').first().json.result.output.Form;\n\n// 2. Parse the Form string into an object\nlet formObj = {};\ntry {\n  formObj = JSON.parse(formString);\n} catch (e) {\n  formObj = {};\n}\n\n// 3. Safely extract the \"Image to reference\" field\nconst imageToReference = typeof formObj[\"Image to reference\"] === \"string\"\n  ? formObj[\"Image to reference\"].trim()\n  : \"\";\n\n// 4. Boolean flag: Do we have a valid image?\nconst hasValidImage = imageToReference !== \"\";\n\n// 5. Return the extracted info\nreturn [\n  {\n    json: {\n      result: hasValidImage,           // true / false\n      image: imageToReference          // The image URL (or empty string)\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -272,7 +272,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -295,7 +295,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -321,7 +321,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/VideoCreation",
+        "url": "={{ $('Webhook').item.json.body.webhook_url }}/webhook/VideoCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -332,6 +332,14 @@
             {
               "name": "external_id",
               "value": "={{ $('Webhook').item.json.body.external_id }}"
+            },
+            {
+              "name": "webhook_url",
+              "value": "={{ $('Webhook').item.json.body.webhook_url }}"
+            },
+            {
+              "name": "webhook_url_taskman",
+              "value": "={{ $('Webhook').item.json.body.webhook_url_taskman }}"
             }
           ]
         },
@@ -349,7 +357,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -361,7 +369,7 @@
       "typeVersion": 4.2,
       "position": [
         1940,
-        220
+        240
       ],
       "id": "263e1f13-b848-40b4-82a4-7faed94d3b21",
       "name": "TM_SetStatus_COMPLETE",
@@ -443,74 +451,14 @@
               "type": "string"
             },
             {
-              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
-              "name": "Image to reference",
-              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
-              "type": "string"
-            },
-            {
-              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
-              "name": "Subject Description",
-              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
-              "type": "string"
-            },
-            {
-              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
-              "name": "Exaggeration Level",
-              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
-              "type": "string"
-            },
-            {
-              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
-              "name": "Visual Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
-              "name": "Lighting Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
-              "name": "Background",
-              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
-              "type": "string"
-            },
-            {
-              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
-              "name": "Sound Text",
-              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
-              "type": "string"
-            },
-            {
-              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
-              "name": "Generate voice",
-              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
-              "type": "string"
-            },
-            {
-              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
-              "name": "Choose model for Video",
-              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
-              "type": "string"
-            },
-            {
-              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
-              "name": "Format",
-              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
-              "type": "string"
-            },
-            {
-              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
-              "name": "Eleven Labs Voice (W/M)",
-              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
-              "type": "string"
+              "id": "3a636048-5f39-42f5-8f89-b1d103b4fc28",
+              "name": "output",
+              "value": "={{ $('TM_GetStatus').item.json.result.output }}",
+              "type": "object"
             },
             {
               "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
-              "name": "Final_Image",
+              "name": "output.Final_Image",
               "value": "={{ $('File Upload').item.json.data.url }}",
               "type": "string"
             }
@@ -522,7 +470,7 @@
       "typeVersion": 3.4,
       "position": [
         1920,
-        40
+        80
       ],
       "id": "eb2b6649-fa7f-49b3-97a2-0a12098d1828",
       "name": "InsideJSON"
@@ -574,7 +522,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -590,7 +538,7 @@
             },
             {
               "name": "metadata",
-              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
+              "value": "={ \n  \"workflow\": \"{{ $('Workflow-Execution').item.json.workflow }}\", \n  \"execution\": \"{{ $('Workflow-Execution').item.json.execution }}\",\n  \"webhook_url\": \"{{ $('Webhook').item.json.body.webhook_url }}\",\n  \"webhook_url_taskman\": \"{{ $('Webhook').item.json.body.webhook_url_taskman }}\"\n}"
             }
           ]
         },
@@ -838,7 +786,38 @@
       ]
     }
   },
-  "pinData": {},
+  "pinData": {
+    "Webhook": [
+      {
+        "headers": {
+          "host": "dev.mindstreamai.app",
+          "user-agent": "axios/1.8.3",
+          "content-length": "184",
+          "accept": "application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7",
+          "accept-encoding": "gzip, br",
+          "cdn-loop": "cloudflare; loops=1",
+          "cf-connecting-ip": "65.109.243.42",
+          "cf-ipcountry": "FI",
+          "cf-ray": "94c8e7a18b01b8a0-AMS",
+          "cf-visitor": "{\"scheme\":\"https\"}",
+          "content-type": "application/json",
+          "x-forwarded-for": "172.71.99.19",
+          "x-forwarded-host": "dev.mindstreamai.app",
+          "x-forwarded-proto": "https"
+        },
+        "params": {},
+        "query": {},
+        "body": {
+          "TaskID": "fda4c06b-4bf0-479c-ae16-10d868935c66",
+          "external_id": "DEMOxpobqqyn40k3t0f5",
+          "webhook_url": "https://dev.mindstreamai.app",
+          "webhook_url_taskman": "https://dev.mindstreamai.app"
+        },
+        "webhookUrl": "https://dev.mindstreamai.app/webhook/ImageCreation",
+        "executionMode": "production"
+      }
+    ]
+  },
   "meta": {
     "instanceId": "306de76e4b7b868087c011f08075d5bdab5fdc016494a71df11c97368feac0db"
   }

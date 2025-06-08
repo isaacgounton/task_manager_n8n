@@ -13,7 +13,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        360,
+        400,
         300
       ],
       "id": "8409ea07-193e-4b3c-814b-45ba3e7e463a",
@@ -32,7 +32,7 @@
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.2,
       "position": [
-        560,
+        600,
         280
       ],
       "id": "a658ac66-1207-4847-a06a-012d3af3ec1f",
@@ -42,12 +42,12 @@
       "parameters": {
         "content": "## Form for calling from WEB\n",
         "height": 460,
-        "width": 340
+        "width": 360
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        340,
+        360,
         0
       ],
       "id": "d6482d0e-7a4d-4449-9efb-3ef5ab1be700",
@@ -72,7 +72,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/ImageCreation",
+        "url": "={{ $('GenerateUniqueID').item.json.webhook_url}}/webhook/ImageCreation",
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
@@ -83,6 +83,14 @@
             {
               "name": "external_id",
               "value": "={{ $json.external_id }}"
+            },
+            {
+              "name": "webhook_url",
+              "value": "={{ $('GenerateUniqueID').item.json.webhook_url}}"
+            },
+            {
+              "name": "webhook_url_taskman",
+              "value": "={{ $('GenerateUniqueID').item.json.webhook_url_taskman}}"
             }
           ]
         },
@@ -91,7 +99,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        980,
+        1020,
         340
       ],
       "id": "e0d31763-a05c-4642-b30c-25b99a5fe652",
@@ -100,7 +108,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "={{ $('GenerateUniqueID').item.json.webhook_url_taskman}}/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -116,7 +124,7 @@
             },
             {
               "name": "metadata",
-              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
+              "value": "={ \n  \"workflow\": \"{{ $('Workflow-Execution').item.json.workflow }}\", \n  \"execution\": \"{{ $('Workflow-Execution').item.json.execution }}\",\n  \"webhook_url\": \"{{ $('GenerateUniqueID').item.json.webhook_url}}\",\n  \"webhook_url_taskman\": \"{{ $('GenerateUniqueID').item.json.webhook_url_taskman}}\"\n}"
             }
           ]
         },
@@ -307,7 +315,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
       "position": [
-        380,
+        420,
         80
       ],
       "id": "5274488f-1bd6-4c92-b74d-c7b0035473be",
@@ -316,7 +324,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "={{ $('GenerateUniqueID').item.json.webhook_url_taskman}}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -327,7 +335,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        780,
+        820,
         340
       ],
       "id": "86acc784-48a2-4de2-9c0f-55e83f2eba23",
@@ -365,7 +373,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        700,
+        740,
         0
       ],
       "id": "6bc3377b-2e22-42d9-8255-120d005f35e2",
@@ -373,7 +381,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Generate random 16-character alphanumeric string and assign it to 'external_id'\nfor (const item of $input.all()) {\n\titem.json.external_id = [...Array(16)]\n\t\t.map(() => Math.random().toString(36)[2])\n\t\t.join('');\n}\n\nreturn $input.all();\n"
+        "jsCode": "// WEBHOOK_URL is your N8N URL and WEBHOOK_URL_TASKMAN is for TaskManager URL if differ. If not, use the same URL like on WEBHOOK_URL\nconst WEBHOOK_URL = \"https://dev.mindstreamai.app\";\nconst WEBHOOK_URL_TASKMAN = \"https://dev.mindstreamai.app\";\n \n// Leave as \"\" if no prefix is needed, or set to something like \"R31-\"\n// PREFIX can be adjusted to any project or environment indicator like \"TASK-\", \"UAT-\", etc.\nconst PREFIX = \"DEMO-\";\n\nfor (const item of $input.all()) {\n  // Generate unique 16-character alphanumeric ID\n  const uniquePart = [...Array(16)].map(() => Math.random().toString(36)[2]).join('');\n\n  // Combine optional prefix with unique ID\n  item.json.external_id = `${PREFIX}${uniquePart}`;\n\n  // Set webhook URLs\n  item.json.webhook_url = WEBHOOK_URL;\n  item.json.webhook_url_taskman = WEBHOOK_URL_TASKMAN;\n}\n\nreturn $input.all();"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -453,7 +461,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        1220,
+        1240,
         0
       ],
       "id": "edb1de36-753c-47d6-9d99-106af27b2250",
@@ -483,7 +491,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        780,
+        820,
         60
       ],
       "id": "7ea7b7a7-1970-4d8b-af9e-5bde8a7620f2",
@@ -496,7 +504,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        980,
+        1020,
         200
       ],
       "id": "3453742b-5a88-40cc-8892-6388a27aab8e",
@@ -513,69 +521,15 @@
               "type": "string"
             },
             {
-              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
-              "name": "Image to reference",
-              "value": "={{ $('FORM').item.json['Image to reference'] }}",
-              "type": "string"
+              "id": "699c591a-04b2-4ec5-a701-a7a1ffa9caf2",
+              "name": "output",
+              "value": "={{ $('Image_Prompt_Agent').item.json.output }}",
+              "type": "object"
             },
             {
-              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
-              "name": "Subject Description",
-              "value": "={{ $('Image_Prompt_Agent').item.json.output['Subject description'] }}",
-              "type": "string"
-            },
-            {
-              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
-              "name": "Exaggeration Level",
-              "value": "={{ $('FORM').item.json['Exaggeration Level'] }}",
-              "type": "string"
-            },
-            {
-              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
-              "name": "Visual Style",
-              "value": "={{ $('FORM').item.json['Visual Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
-              "name": "Lighting Style",
-              "value": "={{ $('Image_Prompt_Agent').item.json.output['Lighting style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
-              "name": "Background",
-              "value": "={{ $('Image_Prompt_Agent').item.json.output.Background }}",
-              "type": "string"
-            },
-            {
-              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
-              "name": "Sound Text",
-              "value": "={{ $('Image_Prompt_Agent').item.json.output['Sound text'] }}",
-              "type": "string"
-            },
-            {
-              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
-              "name": "Generate voice",
-              "value": "={{ $('FORM').item.json['Generate voice'] }}",
-              "type": "string"
-            },
-            {
-              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
-              "name": "Choose model for Video",
-              "value": "={{ $('FORM').item.json['Choose model for Video'] }}",
-              "type": "string"
-            },
-            {
-              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
-              "name": "Format",
-              "value": "={{ $('FORM').item.json.Format }}",
-              "type": "string"
-            },
-            {
-              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
-              "name": "Eleven Labs Voice (W/M)",
-              "value": "={{ $('FORM').item.json['Eleven Labs Voice (W/M)'] }}",
+              "id": "9baa08fa-20d4-462f-9456-02a6fbb332ed",
+              "name": "output.Form",
+              "value": "={{ $('FORM').item.json }}",
               "type": "string"
             }
           ]
@@ -585,7 +539,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        780,
+        820,
         200
       ],
       "id": "53539877-340e-4c2f-a610-1031e831db70",

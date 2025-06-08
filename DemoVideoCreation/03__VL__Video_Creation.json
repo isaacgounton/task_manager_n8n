@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "imageUrl": "={{ $('TM_GetStatus').item.json.result.Final_Image }}",
+        "imageUrl": "={{ $('TM_GetStatus').item.json.result.output.Final_Image }}",
         "prompt": "={{ $json.content }}",
         "aspectRatio": "9:16"
       },
@@ -104,7 +104,7 @@
           "cachedResultName": "CHATGPT-4O-LATEST"
         },
         "text": "What's in this image? Add to the final output a camera motion (random) and anaction to the scene (random). Do not mention random camera motion or random action, just implement into the promt as a natural language",
-        "imageUrls": "={{ $('TM_GetStatus').item.json.result.Final_Image }}",
+        "imageUrls": "={{ $('TM_GetStatus').item.json.result.output.Final_Image }}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.openAi",
@@ -136,7 +136,7 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+                    "leftValue": "={{ $('TM_GetStatus').item.json.result.output.Form.parseJson()['Choose model for Video'] }}",
                     "rightValue": "Kling",
                     "operator": {
                       "type": "string",
@@ -161,7 +161,7 @@
                 "conditions": [
                   {
                     "id": "45ee53b0-6db1-4da3-a515-60b688254618",
-                    "leftValue": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
+                    "leftValue": "={{ $('TM_GetStatus').item.json.result.output.Form.parseJson()['Choose model for Video'] }}",
                     "rightValue": "Veo2",
                     "operator": {
                       "type": "string",
@@ -255,7 +255,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -277,34 +277,6 @@
           "name": "TaskManager DEMO AUTH"
         }
       }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://dev.mindstreamai.app/webhook/AudioCreation",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "TaskID",
-              "value": "={{ $json.task_id }}"
-            },
-            {
-              "name": "external_id",
-              "value": "={{ $('Webhook').item.json.body.external_id }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        380,
-        0
-      ],
-      "id": "ae773249-01f3-4910-9b2e-fce94834ed44",
-      "name": "TriggerWorkflow"
     },
     {
       "parameters": {
@@ -340,7 +312,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/ade4dfea-d284-4c02-95f0-4deeb1435983/update-task/{{ $('TM_SIMPLE_NODE').item.json.task_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -387,81 +359,27 @@
               "type": "string"
             },
             {
-              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
-              "name": "Image to reference",
-              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
-              "type": "string"
-            },
-            {
-              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
-              "name": "Subject Description",
-              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
-              "type": "string"
-            },
-            {
-              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
-              "name": "Exaggeration Level",
-              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
-              "type": "string"
-            },
-            {
-              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
-              "name": "Visual Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
-              "name": "Lighting Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
-              "name": "Background",
-              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
-              "type": "string"
-            },
-            {
-              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
-              "name": "Sound Text",
-              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
-              "type": "string"
-            },
-            {
-              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
-              "name": "Generate voice",
-              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
-              "type": "string"
-            },
-            {
-              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
-              "name": "Choose model for Video",
-              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
-              "type": "string"
-            },
-            {
-              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
-              "name": "Format",
-              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
-              "type": "string"
-            },
-            {
-              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
-              "name": "Eleven Labs Voice (W/M)",
-              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
-              "type": "string"
+              "id": "6c9256dc-2d55-4cd6-95e6-dc59c2382715",
+              "name": "output",
+              "value": "={{ $('TM_GetStatus').item.json.result.output }}",
+              "type": "object"
             },
             {
               "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
-              "name": "Final_Image",
-              "value": "={{ $('TM_GetStatus').item.json.result['Final_Image'] }}",
+              "name": "output.Final_Image",
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Final_Image }}",
               "type": "string"
             },
             {
               "id": "468cfd33-4d6d-4725-9196-a276fa1997f3",
-              "name": "Video_RES",
+              "name": "output.Video_RES",
               "value": "={{ $('IF (Image Ready)1').item.json.data.output.video_url }}",
+              "type": "string"
+            },
+            {
+              "id": "93cf19a3-d741-4ce7-947a-988bdbeb9a3e",
+              "name": "",
+              "value": "",
               "type": "string"
             }
           ]
@@ -510,7 +428,7 @@
     },
     {
       "parameters": {
-        "url": "=https://dev.mindstreamai.app/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/2d9c4c2e-c39a-4da2-aaad-2cd096e2009d/task-status/{{ $('Webhook').item.json.body.TaskID }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {}
@@ -562,7 +480,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -578,7 +496,7 @@
             },
             {
               "name": "metadata",
-              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
+              "value": "={ \n  \"workflow\": \"{{ $('Workflow-Execution').item.json.workflow }}\", \n  \"execution\": \"{{ $('Workflow-Execution').item.json.execution }}\",\n  \"webhook_url\": \"{{ $('Webhook').item.json.webhook_url}}\",\n  \"webhook_url_taskman\": \"{{ $('Webhook').item.json.webhook_url_taskman}}\"\n}"
             }
           ]
         },
@@ -606,6 +524,42 @@
           "name": "TaskManager DEMO AUTH"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Webhook').item.json.body.webhook_url }}/webhook/AudioCreation",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "TaskID",
+              "value": "={{ $json.task_id }}"
+            },
+            {
+              "name": "external_id",
+              "value": "={{ $json.external_id }}"
+            },
+            {
+              "name": "webhook_url",
+              "value": "={{ $('Webhook').item.json.body.webhook_url }}"
+            },
+            {
+              "name": "webhook_url_taskman",
+              "value": "={{ $('Webhook').item.json.body.webhook_url_taskman }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        380,
+        0
+      ],
+      "id": "d584000e-176d-42cd-8cdb-4748e46c0866",
+      "name": "TriggerWorkflow"
     }
   ],
   "connections": {
