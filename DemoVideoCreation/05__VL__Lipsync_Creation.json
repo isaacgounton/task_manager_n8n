@@ -24,11 +24,11 @@
           "parameters": [
             {
               "name": "video_url",
-              "value": "={{ $('TM_GetStatus').item.json.result.Video_RES }}"
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Video_RES }}"
             },
             {
               "name": "audio_url",
-              "value": "={{ $('TM_GetStatus').item.json.result.Audio_MP3 }}"
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Audio_MP3 }}"
             }
           ]
         },
@@ -397,119 +397,6 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
-              "name": "task_id",
-              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
-              "type": "string"
-            },
-            {
-              "id": "84626067-c27a-497f-9925-dec2eea6dd58",
-              "name": "Image to reference",
-              "value": "={{ $('TM_GetStatus').item.json.result['Image to reference'] }}",
-              "type": "string"
-            },
-            {
-              "id": "fd55cc13-9261-4c57-851d-0f56ffbdfdb6",
-              "name": "Subject Description",
-              "value": "={{ $('TM_GetStatus').item.json.result['Subject Description'] }}",
-              "type": "string"
-            },
-            {
-              "id": "91bfc4a7-9cd9-4e7e-b5cb-65d4d1d47931",
-              "name": "Exaggeration Level",
-              "value": "={{ $('TM_GetStatus').item.json.result['Exaggeration Level'] }}",
-              "type": "string"
-            },
-            {
-              "id": "c08ebc36-cbc6-46f0-8259-e09ee933c7c5",
-              "name": "Visual Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Visual Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "21a6ad12-b3e9-4a95-b6ae-37fc74af4d73",
-              "name": "Lighting Style",
-              "value": "={{ $('TM_GetStatus').item.json.result['Lighting Style'] }}",
-              "type": "string"
-            },
-            {
-              "id": "64446c7b-8c42-4beb-a256-edb549b33c66",
-              "name": "Background",
-              "value": "={{ $('TM_GetStatus').item.json.result.Background }}",
-              "type": "string"
-            },
-            {
-              "id": "a02091e1-4b89-4f72-add1-cc3ce26ee100",
-              "name": "Sound Text",
-              "value": "={{ $('TM_GetStatus').item.json.result['Sound Text'] }}",
-              "type": "string"
-            },
-            {
-              "id": "895eb4cb-2730-4e7a-8d96-70f2ee98b030",
-              "name": "Generate voice",
-              "value": "={{ $('TM_GetStatus').item.json.result['Generate voice'] }}",
-              "type": "string"
-            },
-            {
-              "id": "5b8eb4e6-0105-4749-a3b2-722a6a15b56c",
-              "name": "Choose model for Video",
-              "value": "={{ $('TM_GetStatus').item.json.result['Choose model for Video'] }}",
-              "type": "string"
-            },
-            {
-              "id": "b4003f36-738e-44da-9869-e5390b11d79d",
-              "name": "Format",
-              "value": "={{ $('TM_GetStatus').item.json.result.Format }}",
-              "type": "string"
-            },
-            {
-              "id": "94f286ad-0d94-4cbc-94ba-67108b972739",
-              "name": "Eleven Labs Voice (W/M)",
-              "value": "={{ $('TM_GetStatus').item.json.result['Eleven Labs Voice (W/M)'] }}",
-              "type": "string"
-            },
-            {
-              "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
-              "name": "Final_Image",
-              "value": "={{ $('TM_GetStatus').item.json.result['Final_Image'] }}",
-              "type": "string"
-            },
-            {
-              "id": "8b1abe85-980c-4ba5-b5b3-263dd07fc961",
-              "name": "Video_RES",
-              "value": "={{ $('TM_GetStatus').item.json.result.Video_RES }}",
-              "type": "string"
-            },
-            {
-              "id": "6ff7ba3d-3ed8-4ba3-b454-489f0a06c172",
-              "name": "Audio_MP3",
-              "value": "={{ $('TM_GetStatus').item.json.result.Audio_MP3 }}",
-              "type": "string"
-            },
-            {
-              "id": "945e2dfa-2329-460e-b344-f247aeeba193",
-              "name": "Video_Lipsync",
-              "value": "={{ $('HTTP Request2').item.json.video.url }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1940,
-        -160
-      ],
-      "id": "a2f80c6c-a1b9-44b0-8aa0-a018bbc372c8",
-      "name": "InsideJSON"
-    },
-    {
-      "parameters": {
         "mode": "raw",
         "jsonOutput": "{\n  \"status\": \"completed\"\n}\n",
         "options": {}
@@ -571,7 +458,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://dev.mindstreamai.app/webhook/create-task",
+        "url": "={{ $('Webhook').item.json.body.webhook_url_taskman }}/webhook/create-task",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -587,7 +474,7 @@
             },
             {
               "name": "metadata",
-              "value": "={ workflow: {{ $('Workflow-Execution').item.json.workflow }}, execution: {{ $('Workflow-Execution').item.json.execution }} }"
+              "value": "={ \n  \"workflow\": \"{{ $('Workflow-Execution').item.json.workflow }}\", \n  \"execution\": \"{{ $('Workflow-Execution').item.json.execution }}\",\n  \"webhook_url\": \"{{ $('Webhook').item.json.body.webhook_url }}\",\n  \"webhook_url_taskman\": \"{{ $('Webhook').item.json.body.webhook_url_taskman }}\"\n}"
             }
           ]
         },
@@ -615,6 +502,59 @@
           "name": "TaskManager DEMO AUTH"
         }
       }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d11727f-0a9b-45e6-b716-104bb14a5a36",
+              "name": "task_id",
+              "value": "={{ $('TM_SIMPLE_NODE').item.json.task_id }}",
+              "type": "string"
+            },
+            {
+              "id": "390b4363-eb8c-4603-a1b7-2e42bebe286b",
+              "name": "output",
+              "value": "={{ $('TM_GetStatus').item.json.result.output }}",
+              "type": "object"
+            },
+            {
+              "id": "81a1d65c-6d57-44cb-bcb3-743b54ee27f3",
+              "name": "output.Final_Image",
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Final_Image }}",
+              "type": "string"
+            },
+            {
+              "id": "8b1abe85-980c-4ba5-b5b3-263dd07fc961",
+              "name": "output.Video_RES",
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Video_RES }}",
+              "type": "string"
+            },
+            {
+              "id": "6ff7ba3d-3ed8-4ba3-b454-489f0a06c172",
+              "name": "output.Audio_MP3",
+              "value": "={{ $('TM_GetStatus').item.json.result.output.Audio_MP3 }}",
+              "type": "string"
+            },
+            {
+              "id": "e28834d3-a8e1-450c-a523-d87b44969098",
+              "name": "output.Lipsync_Video",
+              "value": "={{ $('HTTP Request2').item.json.video.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1940,
+        -160
+      ],
+      "id": "d1cd596a-cbe0-4507-a891-87bde5c08cdf",
+      "name": "InsideJSON"
     }
   ],
   "connections": {
@@ -775,17 +715,6 @@
         ]
       ]
     },
-    "InsideJSON": {
-      "main": [
-        [
-          {
-            "node": "CreateJSON",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "OutsideJSON": {
       "main": [
         [
@@ -813,6 +742,17 @@
         [
           {
             "node": "TM_GetStatus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsideJSON": {
+      "main": [
+        [
+          {
+            "node": "CreateJSON",
             "type": "main",
             "index": 0
           }

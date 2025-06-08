@@ -139,6 +139,7 @@ Copy all end nodes from the demo and configure them as described in Workflow 1, 
 3. **Error Handling**: Ensure proper authentication setup to avoid errors
 4. **Task Types**: Use descriptive task_type names for easy identification
 5. **Sequential Logic**: Keep workflows focused on single, specific tasks
+6. **Activate workflow**: Do not forget to activate workflows
 
 ## Common Issues
 
